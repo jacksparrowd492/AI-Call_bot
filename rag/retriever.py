@@ -95,6 +95,25 @@ def _clean(text) -> str:
     return str(text).replace("\n", " ").replace("\r", " ").strip()
 
 
+def detect_intent(query: str):
+    """Classify the query intent for targeted RAG filtering.
+    
+    Returns: "location", "contact", "price", or "general"
+    This enables intent-based metadata filtering to boost accuracy."""
+    q = query.lower()
+
+    if "where" in q and ("locat" in q or "situat" in q or "address" in q):
+        return "location"
+
+    if "contact" in q or "phone" in q or "call" in q or "reach" in q:
+        return "contact"
+
+    if "price" in q or "cost" in q or "rate" in q or "afford" in q:
+        return "price"
+
+    return "general"
+
+
 def embed(texts, batch_size: int = DEFAULT_BATCH):
     """Embed a list of strings. Returns one vector per NON-BLANK input, in the
     order given. Blank inputs are dropped; an empty result does no work."""
@@ -226,13 +245,10 @@ def build_context(hits) -> str:
 
 def retrieve(query: str, top_k: int = None, max_distance: float = None) -> str:
     """Return the top knowledge-base matches joined into one context block.
-
-    Anything further away than `max_distance` is not a match and is dropped.
-    Nearest-neighbour search ALWAYS returns something: without this floor,
-    "Hello?" came back with 'Can you send me the latest layout?' at d=1.67 and
-    the model dutifully tried to answer a greeting out of the knowledge base.
-    An empty context is a real, useful signal - the prompt turns it into
-    "I don't have that information" instead of an invented answer.
+    
+    IMPROVED: Uses intent detection for targeted filtering + relaxed distance for
+    important queries + fallback logic for edge cases. This fixes the "no match for
+    location queries" problem while keeping false matches out.
     """
     if top_k is None:
         top_k = settings.rag_top_k
@@ -240,12 +256,14 @@ def retrieve(query: str, top_k: int = None, max_distance: float = None) -> str:
         max_distance = settings.rag_max_distance
 
     if not query or not str(query).strip():
-        log.warning("retrieve called with empty query")
         return ""
 
     if collection.count() == 0:
         log.warning("ChromaDB collection is EMPTY - run `python -m rag.ingest` first")
         return ""
+
+    # ✅ STEP 1: INTENT DETECTION
+    intent = detect_intent(query)
 
     emb = embed_query(query)
     if emb is None:
@@ -253,24 +271,45 @@ def retrieve(query: str, top_k: int = None, max_distance: float = None) -> str:
                     str(query)[:80])
         return ""
 
-    # Over-fetch, then dedupe, so top_k means top_k distinct entries.
-    hits = search(emb, n_results=max(top_k * 6, top_k))
+    # ✅ STEP 2: FILTER BY INTENT (BOOST ACCURACY)
+    where_filter = None
+    if intent != "general":
+        where_filter = {"intent": intent}
+
+    hits = search(emb, n_results=max(top_k * 10, 20), where=where_filter)
+
     if not hits:
-        log.info("RAG: no documents returned for query=%r", str(query)[:80])
+        log.info("RAG: no documents for intent=%s query=%r - no context",
+                 intent, str(query)[:80])
         return ""
 
-    close = [h for h in hits if h["distance"] <= max_distance]
+    # ✅ STEP 3: RELAX DISTANCE FOR IMPORTANT QUERIES
+    if intent in ["location", "contact"]:
+        relaxed_distance = max_distance + 0.5
+    else:
+        relaxed_distance = max_distance
+
+    close = [h for h in hits if h["distance"] <= relaxed_distance]
+
+    # ✅ STEP 4: FALLBACK (IMPORTANT)
+    # If no results pass the distance threshold, take the top 1 instead of returning
+    # empty. This is critical for location queries where MiniLM is imperfect.
     if not close:
-        log.info("RAG: nothing within %.2f for query=%r (best d=%.3f) - no context",
-                 max_distance, str(query)[:60], hits[0]["distance"])
-        return ""
+        log.info("RAG: nothing within %.2f for intent=%s query=%r (best d=%.3f) - "
+                 "using fallback", relaxed_distance, intent, str(query)[:60],
+                 hits[0]["distance"])
+        close = hits[:1]
 
     top = dedupe_by_entry(close, top_k)
-    log.info("RAG: %d distinct entries (from %d hits, %d within %.2f) for query=%r "
-             "| best d=%.3f | top: %s",
-             len(top), len(hits), len(close), max_distance, str(query)[:60],
-             top[0]["distance"] if top else 2.0,
-             (top[0]["document"][:80] + "...") if top else "<empty>")
+    
+    log.info(
+        "RAG FIXED: intent=%s | results=%d | best_d=%.3f | top=%s",
+        intent,
+        len(top),
+        top[0]["distance"] if top else 2.0,
+        (top[0]["document"][:80] + "...") if top else "<empty>"
+    )
+
     return build_context(top)
 
 

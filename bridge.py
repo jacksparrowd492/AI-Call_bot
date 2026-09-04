@@ -7,7 +7,7 @@ from stt import DeepgramStream
 from tts import ElevenLabsStreamer
 from llm import GroqBrain, EXIT_LINE
 from rag.retriever import retrieve
-from handoff_intent import wants_human, extract_time
+from handoff_intent import wants_human, extract_time, yes_no
 
 log = logging.getLogger("jarvis.bridge")
 
@@ -23,7 +23,10 @@ FALLBACK_LINE = "Sorry, I did not catch that. Could you please say it again?"
 HANDOFF_ASK_TIME = ("Of course. I'll arrange for one of our sales specialists to "
                     "call you back. What time works best for you?")
 HANDOFF_CONFIRMED = ("Perfect. Our specialist will call you then, and I'll send "
-                     "you a confirmation on WhatsApp or SMS right away.")
+                     "you a confirmation on WhatsApp and SMS right away.")
+# Spoken when the caller turns the offer down. Nothing is recorded and no
+# message goes out - declining must cost the caller nothing.
+HANDOFF_DECLINED = "No problem. Is there anything else I can help you with?"
 
 
 class MediaStreamBridge:
@@ -64,6 +67,9 @@ class MediaStreamBridge:
         self.callback_requested = False
         self.callback_time = None
         self.awaiting_callback_time = False
+        # The bot has ASKED whether to arrange a callback and is waiting for
+        # the answer. Nothing is recorded or sent until the caller says yes.
+        self.awaiting_handoff_consent = False
         self.callback_confirmed = False
         self.lead_name = None
         self.lead_requirement = None
@@ -150,6 +156,22 @@ class MediaStreamBridge:
             self.awaiting_callback_time = False
             await self._speak(HANDOFF_CONFIRMED)
             return
+
+        # The bot offered a callback on the previous turn. Only an actual
+        # "yes" books it. A caller who ignores the offer and asks something
+        # else has not consented - drop the offer and answer the new question.
+        if self.awaiting_handoff_consent:
+            self.awaiting_handoff_consent = False
+            answer = yes_no(text)
+            if answer is True:
+                log.info("🙋 Caller accepted the callback offer")
+                await self._request_callback(text)
+                return
+            if answer is False:
+                log.info("🙅 Caller declined the callback offer")
+                await self._speak(HANDOFF_DECLINED)
+                return
+            log.info("Callback offer went unanswered - dropping it: %r", text[:60])
 
         if wants_human(text):
             await self._request_callback(text)
@@ -265,7 +287,7 @@ class MediaStreamBridge:
                 self.caller_number, self.lead_name, self.callback_time,
                 include_brochure=not self.brochure_sent))
 
-        if channel in ("whatsapp", "sms"):
+        if channel and channel != "failed":
             self.callback_confirmed = True
             self.brochure_sent = True      # it rode along with the confirmation
             log.info("📅 Callback confirmed to %s via %s",
@@ -302,11 +324,14 @@ class MediaStreamBridge:
         if meta.get("requirement"):
             self.lead_requirement = meta["requirement"]
 
-        # Second layer: the model spotted a handoff the keywords missed.
+        # handoff=true means the bot has just ASKED "shall I arrange a call?".
+        # That is a question, NOT consent. Recording it here booked a callback
+        # for a caller who never answered, and he was sent a text confirming an
+        # appointment he had not agreed to (2026-09-04, 15:15:27). Mark the
+        # offer pending and let the next turn decide.
         if meta.get("handoff") and not self.callback_requested:
-            log.info("🙋 Callback requested via METADATA handoff=true")
-            self.callback_requested = True
-            await self._record_callback()
+            log.info("🙋 Callback offered - waiting for the caller to accept")
+            self.awaiting_handoff_consent = True
 
         if meta.get("whatsapp_wanted") and not self.brochure_sent:
             await self._deliver_brochure()

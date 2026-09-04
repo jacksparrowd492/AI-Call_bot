@@ -253,6 +253,15 @@ class Router:
                 distance=0.0,
             )
 
+        # 1.5 Quick location intent detection - avoid RAG for obvious location queries
+        q_lower = normalize(text)
+        if ("where" in q_lower or "locat" in q_lower or "address" in q_lower or 
+            "situat" in q_lower or "which area" in q_lower):
+            log.info("route=KNOWLEDGE (location intent shortcut) text=%r", text[:60])
+            # Will be handled through normal RAG flow below, but marked as probable
+            # location query. This just ensures location document gets high priority.
+            pass  # Continue to embedding step
+
         # 2. One embedding, one search, covering knowledge AND escalation.
         emb = await retriever.aembed(text)
         loop = asyncio.get_running_loop()

@@ -91,6 +91,38 @@ def deliver_message(to_number: str, body: str, media_url: str = None) -> str:
         return "failed"
 
 
+def deliver_all(to_number: str, body: str, media_url: str = None) -> str:
+    """Send on WhatsApp AND SMS. Returns which channels actually went out:
+    'whatsapp+sms', 'whatsapp', 'sms' or 'failed'.
+
+    deliver_message() picks one channel; this one uses both deliberately. A
+    scheduled callback is an appointment - the caller should not miss it
+    because WhatsApp was unavailable, or because they never opened WhatsApp.
+    """
+    if not to_number or to_number == "unknown":
+        log.warning("No destination number - cannot send message")
+        return "failed"
+
+    client = _client()
+    if not client:
+        return "failed"
+
+    sent = []
+    try:
+        _send_whatsapp(client, to_number, body, media_url)
+        sent.append("whatsapp")
+    except Exception as e:
+        log.warning("WhatsApp unavailable for %s (%s)", to_number, e)
+
+    try:
+        _send_sms(client, to_number, body, media_url)
+        sent.append("sms")
+    except Exception as e:
+        log.error("SMS failed for %s: %s", to_number, e)
+
+    return "+".join(sent) if sent else "failed"
+
+
 # ------------------------------------------------------------------ brochure
 
 def deliver_brochure(to_number: str) -> str:
@@ -118,9 +150,11 @@ def callback_confirmation(name=None, preferred_time=None,
 
 def deliver_callback_confirmation(to_number, name=None, preferred_time=None,
                                   include_brochure=True) -> str:
+    """The caller agreed to a callback, so this is an appointment confirmation.
+    It goes out on BOTH channels rather than whichever answers first."""
     body = callback_confirmation(name, preferred_time, include_brochure)
     url = brochure_url() if include_brochure else None
-    return deliver_message(to_number, body, url)
+    return deliver_all(to_number, body, url)
 
 
 # --------------------------------------------------------------- agent alert
@@ -154,7 +188,17 @@ def notify_agent(caller_number, name=None, requirement=None,
                  settings.agent_dial_number)
         return True
     except Exception as e:
-        log.error("Could not alert the sales agent: %s", e)
+        # 21608 is the trial-account restriction, not a bug in this code: a
+        # trial Twilio account can only message numbers verified in the console.
+        if "21608" in str(e) or "unverified" in str(e).lower():
+            log.error(
+                "Sales agent NOT alerted: %s is not verified on this Twilio "
+                "trial account. Verify it at "
+                "https://console.twilio.com/us1/develop/phone-numbers/manage/verified"
+                " (or upgrade the account), then the alert will send.",
+                settings.agent_dial_number)
+        else:
+            log.error("Could not alert the sales agent: %s", e)
         return False
 
 

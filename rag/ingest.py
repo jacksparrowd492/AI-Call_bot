@@ -75,41 +75,87 @@ def load_payload(path):
 # ------------------------------------------------------------------ building
 
 def project_factsheet(project):
-    """One extra document holding the hard project facts (RERA, DTCP, phone,
-    address). These get asked verbatim on calls and must never be paraphrased."""
+    """Create MULTIPLE query-friendly documents instead of one generic blob.
+    Returns a list of {text, meta} dicts for location, contact, and general facts.
+    This improves semantic matching by having dedicated, keyword-rich embeddings."""
     if not project:
-        return None
+        return []
+
+    docs = []
+
+    location = project.get("location", "")
+    site = project.get("site_location", "")
+
+    # ✅ LOCATION (CRITICAL FIX) - most commonly asked
+    if location or site:
+        docs.append({
+            "text": f"""Category: Location
+Q: Where is the project located?
+Q: What is the location of Karthipuram?
+Q: Where is it situated?
+Q: Address of the project?
+Q: Which area is the project?
+Q: Where exactly?
+A: {location} | {site}""",
+            "meta": {"category": "Location", "intent": "location"}
+        })
+
+    # ✅ CONTACT & PHONE
+    phones = project.get("phone_numbers") or []
+    email = project.get("email", "")
+    if phones or email:
+        phone_str = ", ".join(str(p) for p in phones) if phones else ""
+        docs.append({
+            "text": f"""Category: Contact
+Q: What is the contact number?
+Q: How do I reach you?
+Q: Phone number of the project?
+Q: Email?
+Q: Contact details?
+A: Phone: {phone_str} | Email: {email}""",
+            "meta": {"category": "Contact", "intent": "contact"}
+        })
+
+    # ✅ GENERAL FACTS
     lines = []
     for key, label in [
-        ("name", "Project"), ("type", "Type"), ("location", "Location"),
-        ("site_location", "Site address"), ("total_area_acres", "Total area (acres)"),
-        ("developer", "Developer"), ("promoter_office", "Promoter office"),
-        ("email", "Email"), ("website", "Website"),
-        ("dtcp_number", "DTCP number"), ("rera_registration_number", "RERA registration"),
+        ("name", "Project"),
+        ("developer", "Developer"),
+        ("dtcp_number", "DTCP number"),
+        ("rera_registration_number", "RERA registration"),
+        ("type", "Type"),
+        ("total_area_acres", "Total area (acres)"),
+        ("promoter_office", "Promoter office"),
+        ("website", "Website"),
     ]:
         val = project.get(key)
         if val:
-            lines.append("%s: %s" % (label, val))
-    phones = project.get("phone_numbers") or []
-    if phones:
-        lines.append("Phone: %s" % ", ".join(str(p) for p in phones))
-    if not lines:
-        return None
-    return ("Category: Project Fact Sheet\n"
-            "Q: What are the official project details, approvals and contact information?\n"
-            "A: " + " | ".join(lines))
+            lines.append(f"{label}: {val}")
+
+    if lines:
+        docs.append({
+            "text": f"""Category: Project Facts
+Q: What are the project details?
+Q: Give me project information
+Q: Tell me about the project
+Q: Project name and developer?
+A: {" | ".join(lines)}""",
+            "meta": {"category": "Project Facts", "intent": "facts"}
+        })
+
+    return docs
 
 
 def build_documents(entries, project=None):
     """One embedded document per question phrasing."""
     docs, ids, metadatas = [], [], []
 
-    sheet = project_factsheet(project)
-    if sheet:
-        docs.append(sheet)
-        ids.append("factsheet")
-        metadatas.append({"category": "Project Fact Sheet",
-                          "intent": "project_factsheet", "entry": -1})
+    # ✅ Add structured project facts (location, contact, general)
+    sheet_docs = project_factsheet(project)
+    for i, s in enumerate(sheet_docs):
+        docs.append(s["text"])
+        ids.append(f"factsheet_{i}")
+        metadatas.append(s["meta"])
 
     for e_i, e in enumerate(entries):
         if not e["answer"]:

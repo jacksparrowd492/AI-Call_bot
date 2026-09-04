@@ -67,6 +67,59 @@ def wants_human(text: str) -> bool:
     return False
 
 
+# ------------------------------------------------------ yes / no answers
+# The bot ASKS "shall I arrange a call with our sales team?" and must not act
+# on it until the caller says yes. On the 2026-09-04 call the callback was
+# recorded the moment the question was asked; the caller ignored it and moved
+# on, and still got a text confirming an appointment he never agreed to.
+_YES = re.compile(
+    r"^(?:yes|yeah|yea|yep|yup|ya|sure|surely|ok|okay|okey|alright|all right|"
+    r"please|definitely|absolutely|certainly|of course|why not|go ahead|"
+    r"sounds good|good idea|that would be (?:good|great|nice|helpful)|"
+    r"i (?:would|will|do|am))\b", re.I)
+
+_NO = re.compile(
+    r"^(?:no|nope|nah|not (?:now|really|yet|necessary|needed|interested|required)|"
+    r"don'?t|do not|dont|never mind|nevermind|no need|"
+    r"it'?s (?:ok|okay|fine|alright)|that'?s (?:ok|okay|fine|alright)|"
+    r"maybe later|later|i'?m (?:ok|okay|fine|good))\b", re.I)
+
+# A turn that says goodbye or thanks is closing the call, not booking one.
+_FAREWELL = re.compile(
+    r"\b(?:bye|goodbye|good bye|that'?s all|that is all|thank you|thanks|"
+    r"thank u|thankyou)\b", re.I)
+
+# "ok" / "okay" is a WEAK yes: people say it to acknowledge, not to agree, so
+# "Okay. Thank you." must not book a callback - that exact turn ended the
+# 2026-09-04 call. A turn that also says thanks or goodbye therefore only
+# counts as consent when it OPENS with an unambiguous yes.
+_STRONG_YES = re.compile(
+    r"^(?:yes|yeah|yea|yep|yup|sure|please|definitely|absolutely|certainly|"
+    r"of course|go ahead)\b", re.I)
+
+
+def yes_no(text: str):
+    """True / False for a direct answer, None when the turn is not one.
+
+    None matters as much as the other two: a caller who answers the offer with
+    a different question has not consented, and the turn must fall through to
+    be answered normally rather than being read as either yes or no.
+    """
+    t = re.sub(r"[^\w\s']", " ", (text or "").lower())
+    t = re.sub(r"\s{2,}", " ", t).strip()
+    if not t:
+        return None
+    # An explicit no comes FIRST: "no thanks" is a decline, not a farewell.
+    if _NO.match(t):
+        return False
+    if _FAREWELL.search(t):
+        # "Yes please, thank you" is still a yes; "Okay, thank you" is not.
+        return True if _STRONG_YES.match(t) else None
+    if _YES.match(t):
+        return True
+    return None
+
+
 # ------------------------------------------------------- preferred call time
 _TIME_PATTERNS = [
     r"\b(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm))\b",

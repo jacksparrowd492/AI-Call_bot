@@ -180,6 +180,85 @@ async def main():
     check("exit line spoken", b.tts.spoken == [llm_mod.EXIT_LINE], str(b.tts.spoken))
     check("call is marked for hangup", b.should_end is True)
 
+    print("\n=== 8. a callback is booked ONLY when the caller says yes ===")
+    # 2026-09-04, 15:15:27: the bot asked "shall I arrange a call with our
+    # sales team?" and recorded the callback in the same breath. The caller
+    # ignored the question and asked about schools - and still received an SMS
+    # confirming an appointment he had never agreed to.
+
+    async def utter(b, text):
+        """One caller turn, playing Twilio's mark echo so _speak returns
+        promptly instead of waiting out mark_timeout_ms."""
+        task = asyncio.create_task(b._on_utterance(text))
+        for _ in range(60):
+            await asyncio.sleep(0.01)
+            if b.speaking:
+                b.on_mark(b._expected_mark)
+            if task.done():
+                break
+        await task
+
+    def bridge_with_spy():
+        b, sent = make_bridge()
+        recorded = []
+        b._record_callback = lambda: recorded.append(1) or asyncio.sleep(0)
+        b._deliver_brochure = lambda: asyncio.sleep(0)
+        return b, recorded
+
+    b, recorded = bridge_with_spy()
+    await b._handle_metadata({"handoff": True})
+    check("the offer alone books nothing",
+          recorded == [] and b.callback_requested is False, str(recorded))
+    check("the offer is held as pending", b.awaiting_handoff_consent is True)
+
+    b, recorded = bridge_with_spy()
+    await b._handle_metadata({"handoff": True})
+    b.tts.spoken.clear()
+    await utter(b, "Yes, please.")
+    check("yes books the callback",
+          b.callback_requested is True and recorded == [1], str(recorded))
+    check("and the bot asks when to call",
+          b.tts.spoken == [bridge_mod.HANDOFF_ASK_TIME], str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    await b._handle_metadata({"handoff": True})
+    b.tts.spoken.clear()
+    await utter(b, "No thanks.")
+    check("no books nothing",
+          recorded == [] and b.callback_requested is False, str(recorded))
+    check("and the bot moves on politely",
+          b.tts.spoken == [bridge_mod.HANDOFF_DECLINED], str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    answered = []
+
+    async def fake_reply(t):
+        answered.append(t)
+
+    b._reply = fake_reply
+    await b._handle_metadata({"handoff": True})
+    await utter(b, "Is there any schools?")
+    check("ignoring the offer books nothing",
+          recorded == [] and b.callback_requested is False, str(recorded))
+    check("and the ignored turn is answered as a normal question",
+          answered == ["Is there any schools?"], str(answered))
+    check("the offer does not stay pending", b.awaiting_handoff_consent is False)
+
+    b, recorded = bridge_with_spy()
+    await utter(b, "connect me to a human")
+    check("an explicit ask still books immediately, no second question",
+          b.callback_requested is True and recorded == [1], str(recorded))
+
+    # "Okay" on its own is consent; "Okay, thank you" is a caller ending the
+    # call. That exact turn closed the 2026-09-04 call at 15:18:12, and a weak
+    # yes must never book a salesperson's time.
+    b, recorded = bridge_with_spy()
+    b._reply = fake_reply
+    await b._handle_metadata({"handoff": True})
+    await utter(b, "Okay. Thank you.")
+    check("'okay thank you' ends the call, it does not book a callback",
+          recorded == [] and b.callback_requested is False, str(recorded))
+
     print("\n" + "=" * 60)
     print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")
     if FAIL:
