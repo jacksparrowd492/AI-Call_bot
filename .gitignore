@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------- secrets
+# Live Twilio / Deepgram / Groq credentials. Never commit this.
+.env
+.env.local
+.env.*.local
+
+# ------------------------------------------------------------ caller data
+# leads.db holds real callers' phone numbers, names and transcripts.
+leads.db
+*.sqlite3-journal
+*.db-wal
+*.db-shm
+
+# -------------------------------------------------------------- virtualenv
+jarvis_env/
+venv/
+.venv/
+env/
+
+# ----------------------------------------------------------- model weights
+# kokoro-v1_0.onnx is 325MB - GitHub hard-rejects anything over 100MB.
+# See "What is not in this repo" in README.md for how to fetch these.
+models/
+*.onnx
+*.bin
+
+# ------------------------------------------------------------- project data
+# Client brochure and the knowledge base extracted from it.
+data/
+
+# ------------------------------------------- generated / rebuildable output
+# Rebuild with: python -m rag.ingest data/realestatedata.json
+chroma_db/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+tests/chroma_bridge_test/
+
+# ------------------------------------------------- local scratch and backups
+*.bak
+*.bak[0-9]
+/-d
+
+# ------------------------------------------------------- call logs / capture
+CALL_DIAGNOSIS_*.md
+*.log
+*.aac
+*.wav
+*.mp3
+
+# ----------------------------------------------------------- editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
