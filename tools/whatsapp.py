@@ -43,7 +43,38 @@ def _client():
 
 # --------------------------------------------------------------- core sender
 
+# Set once when Twilio says this account has no WhatsApp channel on the From
+# address at all (63007) rather than "this one caller is not reachable". That
+# is a configuration fact, not a per-message one, and re-discovering it on
+# every message cost a failed round trip - about 0.7s - in front of every SMS
+# the caller was waiting for. Cleared by restarting the server, which is what
+# fixing the configuration takes anyway.
+_CHANNEL_ERRORS = ("63007", "21606", "21910", "63003", "not a valid whatsapp")
+_whatsapp_off = {"reason": None}
+
+
+def whatsapp_ready() -> str:
+    """'' when WhatsApp can be tried, else why it cannot."""
+    if not settings.whatsapp_from:
+        return "TWILIO_WHATSAPP_FROM is not set"
+    return _whatsapp_off["reason"] or ""
+
+
+def _note_whatsapp_failure(error) -> None:
+    text = str(error).lower()
+    if _whatsapp_off["reason"] or not any(c in text for c in _CHANNEL_ERRORS):
+        return
+    _whatsapp_off["reason"] = (
+        "Twilio has no WhatsApp channel on %s. Register that number as a "
+        "WhatsApp sender (or join the sandbox) and restart - until then every "
+        "message goes out by SMS." % settings.whatsapp_from)
+    log.error("WhatsApp is OFF for this run: %s", _whatsapp_off["reason"])
+
+
 def _send_whatsapp(client, to_number, body, media_url=None):
+    blocked = whatsapp_ready()
+    if blocked:
+        raise RuntimeError(blocked)
     kwargs = {"from_": settings.whatsapp_from,
               "to": f"whatsapp:{to_number}",
               "body": body}
@@ -80,6 +111,7 @@ def deliver_message(to_number: str, body: str, media_url: str = None) -> str:
         _send_whatsapp(client, to_number, body, media_url)
         return "whatsapp"
     except Exception as e:
+        _note_whatsapp_failure(e)
         log.warning("WhatsApp unavailable for %s (%s) - falling back to SMS",
                     to_number, e)
 
@@ -112,6 +144,7 @@ def deliver_all(to_number: str, body: str, media_url: str = None) -> str:
         _send_whatsapp(client, to_number, body, media_url)
         sent.append("whatsapp")
     except Exception as e:
+        _note_whatsapp_failure(e)
         log.warning("WhatsApp unavailable for %s (%s)", to_number, e)
 
     try:
@@ -135,7 +168,7 @@ def deliver_brochure(to_number: str) -> str:
 # ------------------------------------------------------------------ callback
 
 def callback_confirmation(name=None, preferred_time=None,
-                          include_brochure=True) -> str:
+                          include_brochure=False) -> str:
     """The message the caller receives after asking to speak to a person."""
     who = f"Hi {name}, " if name else "Hi, "
     when = (f"They will call you {preferred_time}."
@@ -149,9 +182,16 @@ def callback_confirmation(name=None, preferred_time=None,
 
 
 def deliver_callback_confirmation(to_number, name=None, preferred_time=None,
-                                  include_brochure=True) -> str:
+                                  include_brochure=False) -> str:
     """The caller agreed to a callback, so this is an appointment confirmation.
-    It goes out on BOTH channels rather than whichever answers first."""
+    It goes out on BOTH channels rather than whichever answers first.
+
+    It no longer carries the brochure by default. One message that confirmed
+    an appointment AND ended with "here is our project brochure" plus a long
+    URL read as a brochure message with some words in front of it, and callers
+    reported never getting the appointment. The brochure is now its own
+    message, sent after this one.
+    """
     body = callback_confirmation(name, preferred_time, include_brochure)
     url = brochure_url() if include_brochure else None
     return deliver_all(to_number, body, url)
@@ -161,13 +201,14 @@ def deliver_callback_confirmation(to_number, name=None, preferred_time=None,
 
 def notify_agent(caller_number, name=None, requirement=None,
                  preferred_time=None) -> bool:
-    """SMS the sales agent so a human actually makes the call."""
+    """Alert the sales agent - WhatsApp first, SMS after - so a human
+    actually makes the call."""
     if not settings.agent_dial_number:
         log.warning("AGENT_DIAL_NUMBER not set - the sales team was NOT alerted")
         return False
 
     client = _client()
-    if not client or not settings.twilio_phone_number:
+    if not client or not (settings.twilio_phone_number or settings.whatsapp_from):
         log.warning("Cannot alert the agent - Twilio number or credentials missing")
         return False
 
@@ -178,14 +219,22 @@ def notify_agent(caller_number, name=None, requirement=None,
         lines.append(f"Interest: {requirement}")
     lines.append(f"Preferred time: {preferred_time or 'not specified'}")
 
+    body = "\n".join(lines)
+
+    # The agent gets it the same way the caller does: WhatsApp from the
+    # configured sender, SMS if that is not available. Sending it straight off
+    # the Twilio voice number meant the sales team's alert could not use the
+    # WhatsApp channel at all.
     try:
-        msg = client.messages.create(
-            from_=settings.twilio_phone_number,
-            to=settings.agent_dial_number,
-            body="\n".join(lines),
-        )
-        log.info("Sales agent alerted: sid=%s to=%s", msg.sid,
-                 settings.agent_dial_number)
+        _send_whatsapp(client, settings.agent_dial_number, body)
+        return True
+    except Exception as e:
+        _note_whatsapp_failure(e)
+        log.info("Agent alert not deliverable on WhatsApp (%s) - trying SMS", e)
+
+    try:
+        _send_sms(client, settings.agent_dial_number, body)
+        log.info("Sales agent alerted by SMS: %s", settings.agent_dial_number)
         return True
     except Exception as e:
         # 21608 is the trial-account restriction, not a bug in this code: a

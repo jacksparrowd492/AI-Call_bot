@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import settings           # noqa: E402
 import bridge as bridge_mod           # noqa: E402
 import llm as llm_mod                 # noqa: E402
+import scheduling                     # noqa: E402
 
 # What FakeSTT records when _speak reopens the mic, at whatever ECHO_TAIL_MS
 # is actually in force.
@@ -217,8 +218,24 @@ async def main():
     await utter(b, "Yes, please.")
     check("yes books the callback",
           b.callback_requested is True and recorded == [1], str(recorded))
-    check("and the bot asks when to call",
+    check("and the bot asks for the day and time FIRST",
           b.tts.spoken == [bridge_mod.HANDOFF_ASK_TIME], str(b.tts.spoken))
+    b.tts.spoken.clear()
+    await utter(b, "tomorrow at 6 pm")
+    check("the name comes after the time, not before",
+          b.tts.spoken == [bridge_mod.ASK_NAME], str(b.tts.spoken))
+    check("and the time is already on the row before the name is asked",
+          b.callback_ist is not None and len(recorded) >= 2,
+          "%s / %s" % (b.callback_ist, recorded))
+    b.tts.spoken.clear()
+    await utter(b, "Karthi")
+    check("the name is read back before it is trusted",
+          b.tts.spoken == [bridge_mod.CONFIRM_NAME.format(name="Karthi")],
+          str(b.tts.spoken))
+    b.tts.spoken.clear()
+    await utter(b, "Yes")
+    check("and the booking is confirmed once the name is settled",
+          b.tts.spoken == [bridge_mod.HANDOFF_CONFIRMED], str(b.tts.spoken))
 
     b, recorded = bridge_with_spy()
     await b._handle_metadata({"handoff": True})
@@ -258,6 +275,192 @@ async def main():
     await utter(b, "Okay. Thank you.")
     check("'okay thank you' ends the call, it does not book a callback",
           recorded == [] and b.callback_requested is False, str(recorded))
+
+    print("\n=== 9. an NRI's callback time is asked for, then converted ===")
+    # A Dubai caller saying "tomorrow evening" has named a day, not a time.
+    # The bot asks once, keeps the day, and stores the result in IST - because
+    # the person who has to make the call is in Coimbatore.
+    b, recorded = bridge_with_spy()
+    b.caller_number = "+971501234567"
+    b.caller_zone = scheduling.zone_for(b.caller_number)
+    b.callback_requested = True
+    b.awaiting_callback_time = True
+    b.tts.spoken.clear()
+
+    await utter(b, "tomorrow evening")
+    check("a day with no hour gets exactly one follow-up question",
+          b.tts.spoken == [bridge_mod.HANDOFF_ASK_HOUR]
+          and b.awaiting_callback_time is True, str(b.tts.spoken))
+    check("and the day is carried into that question",
+          b.callback_said == "tomorrow evening", repr(b.callback_said))
+
+    b.tts.spoken.clear()
+    await utter(b, "around 6")
+    check("the hour completes the day given a turn earlier",
+          b.callback_local is not None and b.callback_local.hour == 18,
+          str(b.callback_local))
+    check("6pm in Dubai is stored as 7:30pm IST",
+          b.callback_ist is not None
+          and (b.callback_ist.hour, b.callback_ist.minute) == (19, 30),
+          str(b.callback_ist))
+    check("the bot does not ask for an hour twice",
+          b.awaiting_callback_time is False)
+    check("the sales team's note carries both times",
+          "IST" in (b.callback_time or "") and "Asia/Dubai" in (b.callback_time or ""),
+          repr(b.callback_time))
+    check("and only then does it ask for the name",
+          b.tts.spoken == [bridge_mod.ASK_NAME], str(b.tts.spoken))
+
+    print("\n=== 10. a caller who ASKS to schedule is answered with yes ===")
+    # They have already asked, so offering them a callback would be a wasted
+    # turn. Say yes and go straight for the day and time. The "speak to
+    # someone" path is untouched and still uses its own wording.
+    b, recorded = bridge_with_spy()
+    b.tts.spoken.clear()
+    await utter(b, "can we schedule a call")
+    check("scheduling books without a consent round-trip",
+          b.callback_requested is True and recorded == [1], str(recorded))
+    check("the caller's own words become the sheet's 'Interested in'",
+          b.lead_requirement == "can we schedule a call", repr(b.lead_requirement))
+    check("and the day and time are asked straight away, in the schedule wording",
+          b.tts.spoken == [bridge_mod.SCHEDULE_ASK_WHEN], str(b.tts.spoken))
+    check("the name is NOT asked before the time",
+          bridge_mod.ASK_NAME not in b.tts.spoken, str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    b.tts.spoken.clear()
+    await utter(b, "can I speak to someone")
+    check("the 'speak to someone' wording asks for the day and time too",
+          b.tts.spoken == [bridge_mod.HANDOFF_ASK_TIME], str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    booking_q = []
+
+    async def reply_booking(t):
+        booking_q.append(t)
+
+    b._reply = reply_booking
+    await utter(b, "how can I book a plot")
+    check("'how can I book a plot' stays a knowledge-base question",
+          recorded == [] and booking_q == ["how can I book a plot"],
+          str(booking_q))
+
+    b, recorded = bridge_with_spy()
+    b.caller_number = "+971501234567"
+    b.caller_zone = scheduling.zone_for(b.caller_number)
+    b.tts.spoken.clear()
+    await utter(b, "schedule a call tomorrow at 6 pm")
+    check("a time given in the same breath is converted, not stored raw",
+          b.callback_ist is not None
+          and (b.callback_ist.hour, b.callback_ist.minute) == (19, 30),
+          str(b.callback_ist))
+    check("and the bot goes straight to the name, without asking the time again",
+          b.tts.spoken == [bridge_mod.ASK_NAME], str(b.tts.spoken))
+
+    print("\n=== 11. the name is asked once, AFTER the time, and read back ===")
+    b, recorded = bridge_with_spy()
+    await utter(b, "can we schedule a call")
+    await utter(b, "tomorrow at 10 am")
+    b.tts.spoken.clear()
+    await utter(b, "My name is David Kumar")
+    check("a name given in any phrasing is captured and read back",
+          b.lead_name == "David Kumar"
+          and b.tts.spoken == [bridge_mod.CONFIRM_NAME.format(name="David Kumar")],
+          "%r / %s" % (b.lead_name, b.tts.spoken))
+    b.tts.spoken.clear()
+    await utter(b, "Yes")
+    check("and the booking is confirmed with the time already booked",
+          b.tts.spoken == [bridge_mod.HANDOFF_CONFIRMED]
+          and b.callback_local is not None and b.callback_local.hour == 10,
+          "%s / %s" % (b.tts.spoken, b.callback_local))
+
+    b, recorded = bridge_with_spy()
+    await utter(b, "can we schedule a call")
+    await utter(b, "tomorrow at 10 am")
+    b.tts.spoken.clear()
+    await utter(b, "I would rather not")
+    check("a caller who will not give a name still gets their callback",
+          b.lead_name is None and b.callback_requested is True
+          and b.callback_local is not None, repr(b.lead_name))
+    check("and is confirmed rather than asked again",
+          b.tts.spoken == [bridge_mod.HANDOFF_CONFIRMED], str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    b.lead_name = "Priya"                      # already captured by METADATA
+    await utter(b, "can we schedule a call")
+    b.tts.spoken.clear()
+    await utter(b, "tomorrow at 10 am")
+    check("a name already known is not asked for again",
+          b.tts.spoken == [bridge_mod.HANDOFF_CONFIRMED], str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    b.caller_number = "+971501234567"
+    b.caller_zone = scheduling.zone_for(b.caller_number)
+    await utter(b, "can we schedule a call")
+    b.tts.spoken.clear()
+    await utter(b, "David, tomorrow at 6 pm")
+    check("a name AND a time in one answer are both taken",
+          b.lead_name == "David" and b.callback_ist is not None
+          and (b.callback_ist.hour, b.callback_ist.minute) == (19, 30),
+          "%s / %s" % (b.lead_name, b.callback_ist))
+    check("and the volunteered name is read back, not asked for again",
+          b.tts.spoken == [bridge_mod.CONFIRM_NAME.format(name="David")],
+          str(b.tts.spoken))
+
+    b, recorded = bridge_with_spy()
+    await utter(b, "can we schedule a call")
+    b.tts.spoken.clear()
+    await utter(b, "whenever you like")
+    check("'whenever you like' is a time preference, never a name",
+          b.lead_name is None and b.tts.spoken == [bridge_mod.ASK_NAME],
+          "%r / %s" % (b.lead_name, b.tts.spoken))
+    check("and 'anytime' is written down as what they actually said",
+          b.callback_time == "anytime", repr(b.callback_time))
+
+    print("\n=== 12. faults seen on real calls ===")
+    # 2026-09-05 18:04:27 - the caller answered the offer by naming a time, and
+    # the bot logged "offer went unanswered", asked again, and booked a
+    # DIFFERENT time off a later turn.
+    b, recorded = bridge_with_spy()
+    await b._handle_metadata({"handoff": True})
+    b.tts.spoken.clear()
+    await utter(b, "Can you please schedule tomorrow at around 5PM?")
+    check("naming a time IS accepting the offer",
+          b.callback_requested is True and recorded, str(recorded))
+    check("and the offer is not left pending",
+          b.awaiting_handoff_consent is False)
+    check("the time the caller first said is the one booked (5pm, not 6)",
+          b.callback_ist is not None and b.callback_ist.hour == 17,
+          str(b.callback_ist))
+
+    # 2026-09-05 18:04:53 - "My name is Carty." was stored with the full stop.
+    b, recorded = bridge_with_spy()
+    await utter(b, "can we schedule a call")
+    await utter(b, "tomorrow at 10 am")
+    await utter(b, "My name is Carty.")
+    check("a name never keeps its trailing full stop",
+          b.lead_name == "Carty", repr(b.lead_name))
+    b.tts.spoken.clear()
+    await utter(b, "No, it is Karthi")
+    check("a corrected name replaces the misheard one",
+          b.lead_name == "Karthi", repr(b.lead_name))
+
+    # 2026-09-06 10:52:36 - the booking went to the sales team with the name
+    # "I'm" and no time at all: the name was asked first, "I'm" was taken as
+    # the answer, and the time question never got a usable answer after it.
+    b, recorded = bridge_with_spy()
+    await utter(b, "can we schedule a call")
+    await utter(b, "tomorrow at 10 am")
+    check("the time is booked before the name is ever asked",
+          b.callback_local is not None and b.callback_local.hour == 10,
+          str(b.callback_local))
+    b.tts.spoken.clear()
+    await utter(b, "I'm")
+    check("a bare \"I'm\" is not a name",
+          b.lead_name is None, repr(b.lead_name))
+    check("and the booking is confirmed anyway, time intact",
+          b.tts.spoken == [bridge_mod.HANDOFF_CONFIRMED]
+          and b.callback_local is not None, str(b.tts.spoken))
 
     print("\n" + "=" * 60)
     print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

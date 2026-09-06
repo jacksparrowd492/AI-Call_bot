@@ -67,6 +67,60 @@ def wants_human(text: str) -> bool:
     return False
 
 
+# --------------------------------------------------- asking to SCHEDULE
+# Separate from wants_human() on purpose, and both stay.
+#
+#   wants_human()    "put me through to a person"
+#   wants_schedule() "let's fix a time"
+#
+# The second deserves its own answer: the caller has already asked, so the bot
+# says yes and goes straight to which day and what time, instead of offering a
+# callback they just requested.
+#
+# Three real knowledge-base questions sit in the blast radius and must NEVER
+# trigger this - answering them with "sure, when suits you?" would be nonsense:
+#   "What is the payment schedule?"
+#   "How can I book a plot?"
+#   "What is the booking amount?"
+_SCHED_VERB = r"(?:schedule|arrange|set\s?up|fix|organi[sz]e)"
+_SCHED_OBJECT = (r"(?:call|call\s?back|callback|appointment|meeting|visit|"
+                 r"site\s?visit|tour|discussion|consultation|slot|time)")
+
+_SCHED_COMBINED = re.compile(
+    r"\b%s\b[^.?!]{0,20}?\b%s\b" % (_SCHED_VERB, _SCHED_OBJECT), re.I)
+
+# "can I schedule", "I want to arrange", "let's fix" - no object needed. Note
+# that "book" is deliberately absent here: "can I book" is about a plot.
+_SCHED_BARE = re.compile(
+    r"\b(?:can|could|may|shall)\s+(?:i|we|you)\s+(?:please\s+)?%s\b"
+    r"|\bi\s+(?:want|would like|need)\s+to\s+%s\b"
+    r"|\b(?:let'?s|let us)\s+%s\b" % (_SCHED_VERB, _SCHED_VERB, _SCHED_VERB), re.I)
+
+# "book" counts only with a meeting-shaped object.
+_BOOK_MEETING = re.compile(
+    r"\bbook\b[^.?!]{0,15}?\b(?:call|call\s?back|callback|appointment|"
+    r"meeting|visit|site\s?visit|slot|tour)\b", re.I)
+
+_SCHED_NEG = re.compile(
+    r"\b(?:payment|construction|possession|emi|instal?ment|delivery|handover|"
+    r"work|project|price|cost)\s+schedule\b"
+    r"|\bschedule\s+of\s+(?:payment|work|construction)\b"
+    r"|\bbooking\s+(?:amount|fee|charge|process|advance|procedure)\b"
+    r"|\bbook\s+(?:a|the|my|one)?\s*"
+    r"(?:plot|flat|villa|unit|site(?!\s*visit)|land|apartment|house|property)\b",
+    re.I)
+
+
+def wants_schedule(text: str) -> bool:
+    """True when the caller is asking to SET UP a call, visit or appointment."""
+    t = (text or "").strip()
+    if not t or _SCHED_NEG.search(t):
+        return False
+    return bool(_SCHED_COMBINED.search(t)
+                or _SCHED_BARE.search(t)
+                or _BOOK_MEETING.search(t))
+
+
 # ------------------------------------------------------ yes / no answers
 # The bot ASKS "shall I arrange a call with our sales team?" and must not act
 # on it until the caller says yes. On the 2026-09-04 call the callback was
@@ -118,6 +172,113 @@ def yes_no(text: str):
     if _YES.match(t):
         return True
     return None
+
+
+# ------------------------------------------------------------ caller's name
+# The bot asks "may I have your name?" before booking a callback, because a
+# callback row with no name is next to useless to a salesperson. What comes
+# back is usually just the name - Deepgram capitalises it - but people also
+# say "my name is David" or "this is Karthi speaking".
+_NAME_LEAD = re.compile(
+    r"\b(?:my name is|my name's|i am|i'?m|this is|it'?s|it is|name is|"
+    r"you can call me|call me)\s+"
+    r"([A-Za-z][A-Za-z.'-]*(?:\s+[A-Za-z][A-Za-z.'-]*){0,2})", re.I)
+
+# "Karthi speaking", "David here" - the name is the part in front.
+_NAME_TRAILERS = {"speaking", "here", "only", "side", "itself", "calling"}
+
+# Words that are never the answer to "what is your name?", so a turn made only
+# of these is a refusal, a greeting or an answer to some other question.
+_NOT_A_NAME = {
+    "yes", "yeah", "no", "nope", "not", "hello", "hi", "hey", "ok", "okay",
+    "sure", "thanks", "thank", "you", "please", "sorry", "what", "who", "why",
+    "how", "when", "where", "which", "tomorrow", "today", "tonight", "morning",
+    "evening", "afternoon", "night", "call", "callback", "time", "name", "my",
+    "is", "the", "a", "an", "i", "am", "it", "this", "that", "later", "now",
+    "anytime", "speaking", "here", "fine", "good", "well", "rather", "prefer",
+    "interested", "nothing", "none", "skip", "never", "mind", "mister", "sir",
+    "madam", "maam",
+    # Project vocabulary. When the recogniser mishears an answer to "may I
+    # have your name?" it does not produce noise - it produces a word it was
+    # expecting on this call, and "my name is Karthi" came back as "security".
+    # Writing that into the sales sheet as somebody's name is worse than
+    # asking them again, which is what bridge.py now does when this list
+    # rejects the answer.
+    "security", "water", "supply", "transport", "transportation", "project",
+    "brochure", "price", "plot", "plots", "amenities", "infrastructure",
+    "electricity", "connectivity", "parks", "park", "school", "schools",
+    "metro", "road", "roads", "location", "address", "site", "layout",
+    "booking", "township", "details", "detail", "information", "facility",
+    "facilities", "sewage", "drainage", "borewell", "maintenance",
+    # Contractions. A caller who starts to introduce themselves and is cut off
+    # by the endpointer leaves a bare "I'm" behind - and "I'm" went into the
+    # sales sheet as somebody's name on the 2026-09-06 call, because the plain
+    # words "i" and "am" were listed here but the contraction was not.
+    "i'm", "im", "i've", "ive", "i'll", "ill", "i'd", "it's", "its", "that's",
+    "thats", "there's", "theres", "we're", "were", "you're", "youre", "let's",
+    "lets", "don't", "dont", "can't", "cant", "won't", "wont", "isn't", "isnt",
+    "he's", "she's", "they're", "what's", "whats",
+    # Spoken clock words. These arrive on their own when a caller answers the
+    # time question and the name question in the wrong order.
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "ten", "eleven", "twelve", "o'clock", "oclock", "am", "pm",
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
+    "sunday", "week", "weekend", "next", "noon", "midnight", "around", "at",
+    "after", "before", "by", "sometime", "half", "past", "quarter", "clock",
+    "whenever", "any",
+}
+
+_NAME_WORD = re.compile(r"[A-Za-z][A-Za-z.'-]*$")
+
+
+def extract_name(text: str):
+    """Pull a caller's name out of their answer, or None.
+
+    Conservative on purpose. Writing "Not Interested" into the sales sheet as
+    somebody's name is worse than leaving the cell empty.
+    """
+    t = (text or "").strip()
+    if not t:
+        return None
+
+    m = _NAME_LEAD.search(t)
+    if m:
+        candidate = m.group(1)
+    else:
+        # A bare answer: "David." / "Karthi Kumar" - and often the name plus
+        # the time in one breath: "David, tomorrow at six". Take the leading
+        # run of name-shaped words and stop at the first word that cannot be
+        # part of a name, which is what ends "David, tomorrow ..." at "David".
+        head = re.split(r"[,;]", t)[0]
+        bare = re.sub(r"[^\w\s'-]", " ", head)
+        bare = re.sub(r"\s{2,}", " ", bare).strip()
+        words = bare.split()
+        # More than three words before the comma is a sentence, not a name.
+        # Without this, "can we schedule a call" becomes "Can We Schedule".
+        if not words or len(words) > 3:
+            return None
+        lead = []
+        for word in words:
+            if word.lower() in _NOT_A_NAME or not _NAME_WORD.match(word):
+                break
+            lead.append(word)
+        if not lead:
+            return None
+        candidate = " ".join(lead)
+
+    words = [w.strip(".,'-") for w in candidate.split()]
+    words = [w for w in words if w]
+    while words and words[-1].lower() in _NAME_TRAILERS:
+        words.pop()
+    if not words or len(words) > 3:
+        return None
+    if any(w.lower() in _NOT_A_NAME for w in words):
+        return None
+    if any(not _NAME_WORD.match(w) for w in words):
+        return None
+    if len("".join(words)) < 2:
+        return None
+    return " ".join(w[:1].upper() + w[1:] for w in words)
 
 
 # ------------------------------------------------------- preferred call time

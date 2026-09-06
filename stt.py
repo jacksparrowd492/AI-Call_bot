@@ -26,6 +26,8 @@ import time
 import websockets
 
 from config import settings
+from urllib.parse import quote
+from vocab import deepgram_keywords
 
 log = logging.getLogger("jarvis.stt")
 
@@ -42,21 +44,50 @@ FILLERS = {
     "mmm", "mhm", "oh", "so", "the", "uh", "uhh", "um", "umm", "you",
 }
 
-DEEPGRAM_WS_URL = (
-    "wss://api.deepgram.com/v1/listen"
-    "?encoding=mulaw"
-    "&sample_rate=8000"
-    "&channels=1"
-    f"&model={settings.deepgram_model}"
-    "&interim_results=true"          # required for utterance_end_ms
-    "&punctuate=true"
-    "&smart_format=true"
-    "&numerals=true"
-    "&filler_words=false"
-    "&vad_events=true"               # SpeechStarted, so we can cancel a flush
-    f"&endpointing={settings.deepgram_endpointing_ms}"
-    f"&utterance_end_ms={settings.deepgram_utterance_end_ms}"
-)
+# One-word turns that ARE answers, and must survive the short-turn confidence
+# rule in _is_junk. Everything else said in a single word - "Yeah." off the
+# television, "Right." from someone else in the room - has to earn its way
+# through on confidence alone.
+SHORT_ANSWERS = {
+    "yes", "yeah", "yep", "yup", "no", "nope", "ok", "okay", "sure",
+    "correct", "right", "fine", "please", "stop", "wait", "hello", "bye",
+    "thanks",
+}
+
+def _build_url(tuned: bool = True) -> str:
+    """The Deepgram query string.
+
+    tuned=False drops Indian English and the keyword boost, and is what we
+    retry with if Deepgram rejects the tuned URL: a call that connects on a
+    worse model beats a call that does not connect at all.
+    """
+    url = (
+        "wss://api.deepgram.com/v1/listen"
+        "?encoding=mulaw"
+        "&sample_rate=8000"
+        "&channels=1"
+        f"&model={settings.deepgram_model}"
+        "&interim_results=true"          # required for utterance_end_ms
+        "&punctuate=true"
+        "&smart_format=true"
+        "&numerals=true"
+        "&filler_words=false"
+        "&vad_events=true"               # SpeechStarted, so we can cancel a flush
+        f"&endpointing={settings.deepgram_endpointing_ms}"
+        f"&utterance_end_ms={settings.deepgram_utterance_end_ms}"
+    )
+    if not tuned:
+        return url
+    if settings.deepgram_language:
+        url += "&language=" + quote(settings.deepgram_language)
+    if settings.deepgram_boost:
+        # keywords=Term:intensity, repeated. This is the one fix that lands
+        # BEFORE a transcript exists rather than patching one afterwards.
+        url += "".join("&keywords=" + quote(k) for k in deepgram_keywords())
+    return url
+
+
+DEEPGRAM_WS_URL = _build_url()
 
 
 class DeepgramStream:
@@ -83,18 +114,18 @@ class DeepgramStream:
                      "utterance_end=%sms)", settings.deepgram_endpointing_ms,
                      settings.deepgram_utterance_end_ms)
 
-            self._ws = await websockets.connect(
-                DEEPGRAM_WS_URL,
-                extra_headers={"Authorization": f"Token {settings.deepgram_api_key}"},
-                ssl=ssl.create_default_context(),
-                open_timeout=30,
-                ping_interval=5,
-                ping_timeout=20,
-                close_timeout=10,
-                max_size=None,
-            )
-
-            log.info("✅ Deepgram connected")
+            try:
+                self._ws = await self._connect(DEEPGRAM_WS_URL)
+                log.info("✅ Deepgram connected (%s, %d boosted terms)",
+                         settings.deepgram_language or "default",
+                         len(deepgram_keywords()) if settings.deepgram_boost else 0)
+            except Exception as e:
+                # A rejected language or keyword list must never take the call
+                # down. Retry once, plain.
+                log.error("Deepgram rejected the tuned URL (%s) - retrying "
+                          "without language/keywords", e)
+                self._ws = await self._connect(_build_url(tuned=False))
+                log.info("✅ Deepgram connected (untuned fallback)")
 
             self._tasks.append(asyncio.create_task(self._receiver()))
             self._tasks.append(asyncio.create_task(self._keepalive()))
@@ -102,6 +133,18 @@ class DeepgramStream:
         except Exception as e:
             log.exception("❌ Failed to connect to Deepgram: %s", e)
             raise
+
+    async def _connect(self, url):
+        return await websockets.connect(
+            url,
+            extra_headers={"Authorization": f"Token {settings.deepgram_api_key}"},
+            ssl=ssl.create_default_context(),
+            open_timeout=30,
+            ping_interval=5,
+            ping_timeout=20,
+            close_timeout=10,
+            max_size=None,
+        )
 
     async def close(self):
         if self._closed:
@@ -223,6 +266,13 @@ class DeepgramStream:
             return "all filler words"
         if confidence and confidence < settings.stt_min_confidence:
             return f"low confidence {confidence:.2f}"
+        # A whole turn that is one word is the shape background noise almost
+        # always arrives in. A real one-word answer comes back at 0.9+, so ask
+        # more of it than of a sentence - unless it is one of the words a
+        # caller genuinely answers with.
+        if (len(words) == 1 and words[0] not in SHORT_ANSWERS
+                and confidence and confidence < settings.stt_short_confidence):
+            return f"single unclear word {words[0]!r} at {confidence:.2f}"
         return ""
 
     async def _flush(self, why: str):
@@ -300,6 +350,15 @@ class DeepgramStream:
         if not is_final:
             # Still talking. Hold off on any pending flush.
             self._cancel_flush()
+            return
+
+        # NOISE. A finalized fragment this uncertain is background, not the
+        # caller. Dropping it HERE and not at flush time matters: the turn
+        # keeps the best confidence it saw, so one real sentence used to carry
+        # a scrap of someone else's conversation into the reply with it.
+        if confidence and confidence < settings.stt_noise_confidence:
+            log.info("🗑 Noise fragment ignored (conf=%.2f): %r",
+                     confidence, text[:60])
             return
 
         async with self._lock:

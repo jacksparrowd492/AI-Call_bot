@@ -11,7 +11,8 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from handoff_intent import wants_human, yes_no, extract_time   # noqa: E402
+from handoff_intent import (wants_human, wants_schedule,        # noqa: E402
+                            yes_no, extract_time, extract_name)
 
 PASS, FAIL = [], []
 
@@ -45,6 +46,31 @@ def main():
         ("", False),
     ])
 
+    table("asking to SCHEDULE something", wants_schedule, [
+        ("can I schedule a call", True),
+        ("I want to schedule a callback", True),
+        ("please arrange a call", True),
+        ("book an appointment", True),
+        ("book a site visit", True),
+        ("schedule a site visit", True),
+        ("can you set up a call", True),
+        ("let us fix a time", True),
+        ("I would like to arrange a meeting", True),
+        # ...and the knowledge-base questions that sit right next to it. All of
+        # these are real entries in data/, and answering any of them with
+        # "sure, when suits you?" would be nonsense.
+        ("how can I book a plot", False),
+        ("can I book a plot", False),
+        ("what is the booking amount", False),
+        ("tell me the booking process", False),
+        ("what is the payment schedule", False),
+        ("what is the construction schedule", False),
+        ("I want to book a villa", False),
+        ("what time do you open", False),
+        ("is there any school nearby", False),
+        ("", False),
+    ])
+
     table("answering 'shall I arrange a call?'", yes_no, [
         ("yes", True),
         ("yes please", True),
@@ -70,6 +96,34 @@ def main():
         ("Is there any school nearby?", None),
         ("what about the water supply", None),
         ("hmm", None),
+        ("", None),
+    ])
+
+    table("answering 'may I have your name?'", extract_name, [
+        ("David.", "David"),
+        ("Karthi", "Karthi"),
+        ("Ravi Shankar", "Ravi Shankar"),
+        ("my name is David Kumar", "David Kumar"),
+        ("This is Karthi speaking", "Karthi"),
+        ("I'm Ahmed", "Ahmed"),
+        ("it is Suresh", "Suresh"),
+        ("David here", "David"),
+        # Name and time in one breath - both must survive.
+        ("David, tomorrow at 6 pm", "David"),
+        ("Priya, anytime is fine", "Priya"),
+        # Writing "Not Interested" into the sheet as somebody's name is worse
+        # than leaving the cell empty.
+        ("I would rather not", None),
+        ("why do you need it", None),
+        ("not interested", None),
+        ("yes", None),
+        ("no thanks", None),
+        ("tomorrow at 6", None),
+        ("10 am", None),
+        ("hello", None),
+        # A question asked instead of a name must not become one.
+        ("can we schedule a call", None),
+        ("what is the price per square foot", None),
         ("", None),
     ])
 

@@ -131,19 +131,53 @@ the brochure, or availability - end your reply with this soft call to action:
 Use it once per topic. Do not repeat it on every single turn.
 
 ===========================================================
-8. EDGE CASES
+8. A TOPIC ON ITS OWN IS A QUESTION - ANSWER IT
+===========================================================
+People on the phone do not speak in full sentences. They say the topic and
+stop: "transport service", "the amenities", "water", "security", "schools",
+"parks". THAT IS A QUESTION ABOUT THAT TOPIC. Answer it from the PROJECT
+KNOWLEDGE exactly as if they had asked "tell me about the transport", in one
+or two sentences.
+
+NEVER answer a named topic with a question of your own. "Which transport
+details would you like?" is not an answer - the caller told you the topic and
+is waiting to hear what you know. Asking them to narrow it down wastes their
+turn, and repeating it makes the bot sound broken.
+
+The ONLY turns that get the clarifying line are the ones that name no topic at
+all - "tell me about it", "details please", "explain" with nothing attached:
+"{VAGUE_LINE}"
+
+If a topic IS named but the knowledge block does not cover it, that is the
+not-found case in section 5. Never the clarifying question.
+
+===========================================================
+9. WHAT YOU MUST NEVER ASK FOR
+===========================================================
+- NEVER ask the caller for their phone number, and never repeat it back. The
+  system already has the number they are calling from; asking for it makes the
+  caller think they have to spell it out, and it is one of the fastest ways to
+  lose them.
+- NEVER ask "may I have your name?" and NEVER ask what day or time suits them.
+  The backend runs the whole callback booking itself, in its own order - the
+  day and the time first, then the name - and it speaks those questions with
+  its own wording. If you ask them too, the caller is asked everything twice.
+- To hand a caller over, say the not-found line from section 5 and set
+  "handoff": true. That is the whole job. The booking takes it from there.
+
+===========================================================
+10. OTHER EDGE CASES
 ===========================================================
 - Partial data: answer only the part you actually have, then offer the callback
   for the rest. Do not pad the gap.
-- Vague query ("tell me about it", "details please") ->
-  "{VAGUE_LINE}"
 - Caller repeats a question: answer it again, shorter, without commenting on
   the repetition.
 - Caller gives their name or requirement: acknowledge it warmly and capture it
-  in METADATA.
+  in METADATA. Do not ask them to confirm the spelling - the backend reads a
+  name back itself.
 
 ===========================================================
-9. METADATA FORMAT
+11. METADATA FORMAT
 ===========================================================
 {{
   "name": string or null,            // caller's name if they gave it
@@ -155,7 +189,7 @@ Use it once per topic. Do not repeat it on every single turn.
 }}
 
 ===========================================================
-10. WORKED EXAMPLES
+12. WORKED EXAMPLES
 ===========================================================
 
 Caller: "Hello"
@@ -169,6 +203,12 @@ SPEAKABLE_RESPONSE:
 Karthipuram is a one hundred and ninety acre township in Coimbatore, on Avinashi Road at Neelambur, near Kathir Engineering College Road.
 METADATA:
 {{"name": null, "requirement": "location enquiry", "intent_score": 5, "whatsapp_wanted": false, "handoff": false, "end_conversation": false}}
+
+Caller: "Transport service."
+SPEAKABLE_RESPONSE:
+There's no metro station inside the township itself, but Neelambur is well connected - the airport is close by, and highway and metro projects are part of why we highlight the location.
+METADATA:
+{{"name": null, "requirement": "transport and connectivity", "intent_score": 5, "whatsapp_wanted": false, "handoff": false, "end_conversation": false}}
 
 Caller: "What is the price per square foot?"
 SPEAKABLE_RESPONSE:
@@ -246,7 +286,17 @@ def split_sentences(text: str):
 
 class GroqBrain:
     def __init__(self):
-        self.client = Groq(api_key=settings.groq_api_key) if settings.groq_api_key else None
+        # max_retries=0 is deliberate and it matters more than it looks. The
+        # SDK's default is to retry a 429 after the Retry-After header, which
+        # on the 2026-09-06 call meant "Retrying request in 5.000000 seconds"
+        # - five seconds of DEAD AIR with the caller waiting. A phone call
+        # cannot spend its latency budget sleeping, so rate limits are handled
+        # in _open_stream instead, by moving to another model that has its own
+        # quota. The timeout is the same bargain: a stalled connection has to
+        # fail fast enough that the fallback line still sounds like an answer.
+        self.client = (Groq(api_key=settings.groq_api_key, max_retries=0,
+                            timeout=settings.llm_timeout_s)
+                       if settings.groq_api_key else None)
         # Instance-level so a fallback survives for the rest of the call once a
         # retired model id has been discovered, instead of failing every turn.
         self.model = settings.groq_model
@@ -256,6 +306,54 @@ class GroqBrain:
         # Raw text of the last completion, so the bridge can read METADATA
         # without the sentences being re-joined.
         self.last_raw = ""
+
+    # --------------------------------------------------------------- summary
+    SUMMARY_PROMPT = (
+        "You summarise a finished sales phone call for the salesperson who has "
+        "to follow it up. Write two short sentences at most, in plain past "
+        "tense: what the caller asked about, and what was agreed. Name only "
+        "things that actually appear in the transcript - no advice, no "
+        "speculation, no greeting, no sign-off. If the caller asked nothing of "
+        "substance, say so in a few words."
+    )
+
+    def summarize_call(self, history) -> str:
+        """One or two lines for the sales sheet.
+
+        Runs AFTER the caller has hung up, so latency does not matter here -
+        but a failure must never cost us the row, hence the bare return.
+        """
+        if not self.client or not history:
+            return ""
+
+        lines = []
+        for turn in history[-24:]:
+            who = "Caller" if turn.get("role") == "user" else "Jarvis"
+            body = " ".join((turn.get("content") or "").split())
+            if body:
+                lines.append("%s: %s" % (who, body[:300]))
+        if not lines:
+            return ""
+
+        kwargs = dict(
+            model=self.model,
+            messages=[{"role": "system", "content": self.SUMMARY_PROMPT},
+                      {"role": "user", "content": "\n".join(lines)}],
+            temperature=0,
+            max_tokens=160,
+        )
+        effort = self._reasoning_effort(self.model)
+        if effort:
+            kwargs["reasoning_effort"] = effort
+
+        try:
+            resp = self.client.chat.completions.create(**kwargs)
+            text = (resp.choices[0].message.content or "").strip()
+        except Exception as e:
+            log.warning("Call summary failed (%s) - using the plain one", e)
+            return ""
+
+        return self._strip_json(re.sub(r"\s+", " ", text))[:500]
 
     # ---------------------------------------------------------------- warmup
     def warmup(self):
@@ -272,14 +370,13 @@ class GroqBrain:
             log.warning("Groq warmup failed (%s) - resolving on the first call", e)
 
     # ------------------------------------------------------------------ reply
-    def reply_stream(self, history, user_text, rag_context):
-        """Yield sentence chunks as they are generated (streaming)."""
-        self.last_raw = ""
+    def _build_messages(self, history, user_text, rag_context):
+        """The message list for one caller turn.
 
-        if not self.client:
-            yield "Sorry, my brain is offline right now. Please call again later."
-            return
-
+        Extracted so the buffered path (reply_stream) and the live path
+        (reply_stream_live) can never drift apart - a difference here would
+        show up as the bot answering differently depending on a config flag.
+        """
         # An empty context is a real signal, not a formatting problem: it means
         # the knowledge base had nothing close. Say so plainly so the model
         # falls into the "not found" branch instead of improvising.
@@ -296,6 +393,17 @@ class GroqBrain:
             "role": "user",
             "content": f"PROJECT KNOWLEDGE:\n{knowledge}\n\nCALLER SAID: {user_text}",
         })
+        return messages
+
+    def reply_stream(self, history, user_text, rag_context):
+        """Yield sentence chunks as they are generated (streaming)."""
+        self.last_raw = ""
+
+        if not self.client:
+            yield "Sorry, my brain is offline right now. Please call again later."
+            return
+
+        messages = self._build_messages(history, user_text, rag_context)
 
         try:
             buffer, finish_reason = self._stream_completion(messages)
@@ -325,6 +433,109 @@ class GroqBrain:
         for sentence in sentences:
             yield sentence
 
+    # --------------------------------------------------- live (low latency)
+    # SPEAKABLE_RESPONSE is written first and METADATA second, so waiting for
+    # the whole completion means the caller waits through a JSON block they
+    # will never hear. This version yields each sentence the moment the model
+    # has finished writing it. Everything else - the prompt, the guards, the
+    # sentence cap, last_raw for METADATA - is identical to reply_stream.
+    _METADATA_STARTED = re.compile(r"METADATA\s*:", re.I)
+
+    def reply_stream_live(self, history, user_text, rag_context):
+        """Yield each sentence as soon as it is complete, not at the end."""
+        self.last_raw = ""
+
+        if not self.client:
+            yield "Sorry, my brain is offline right now. Please call again later."
+            return
+
+        messages = self._build_messages(history, user_text, rag_context)
+
+        try:
+            stream = self._open_stream(messages)
+        except Exception as e:
+            log.error("Groq error: %s", e)
+            yield "Sorry, one moment - let me connect you to my team."
+            return
+
+        cap = settings.max_reply_sentences
+        buffer, emitted, finish_reason, reasoning_chars = "", 0, None, 0
+
+        def _ready(text, closed):
+            """Sentences that are safe to speak right now.
+
+            Until METADATA starts, the LAST sentence may still be growing, so
+            it is held back. Once METADATA starts, the spoken part is finished
+            and all of it can go - the caller never waits on the JSON.
+            """
+            parts = split_sentences(self.clean_for_speech(text))
+            return parts if closed else parts[:-1]
+
+        try:
+            for event in stream:
+                if not event.choices:          # final usage-only chunk
+                    continue
+                choice = event.choices[0]
+                delta = choice.delta
+                reasoning_chars += len(getattr(delta, "reasoning", None) or "")
+                if choice.finish_reason:
+                    finish_reason = choice.finish_reason
+
+                piece = getattr(delta, "content", None) or ""
+                if not piece:
+                    continue
+                buffer += piece
+
+                # NOTE: we keep consuming the stream even after the sentence
+                # cap is reached. Stopping early would cut off the METADATA
+                # block, and with it end_conversation and the lead fields.
+                if emitted >= cap:
+                    continue
+
+                closed = bool(self._METADATA_STARTED.search(buffer))
+                ready = _ready(buffer, closed)
+                while emitted < len(ready) and emitted < cap:
+                    yield ready[emitted]
+                    emitted += 1
+        except Exception as e:
+            log.error("Groq stream error after %d sentence(s): %s", emitted, e)
+            if not emitted:
+                yield "Sorry, one moment - let me connect you to my team."
+                return
+        finally:
+            self.last_raw = buffer
+            close = getattr(stream, "close", None)
+            if close is not None:
+                try:
+                    close()
+                except Exception:
+                    pass
+
+        print("\n\U0001f916 FULL BOT RESPONSE:\n", buffer)
+
+        if reasoning_chars:
+            log.info("Groq: discarded %d reasoning chars, kept %d content chars "
+                     "(finish_reason=%s)", reasoning_chars, len(buffer),
+                     finish_reason)
+        if finish_reason == "length":
+            log.warning("Groq hit max_tokens=%d - the reply is truncated. Raise "
+                        "LLM_MAX_TOKENS or lower LLM_REASONING_EFFORT.",
+                        settings.llm_max_tokens)
+
+        # Whatever is left once the completion is closed: the final sentence,
+        # or the whole reply if the model never wrote a METADATA block.
+        for sentence in _ready(buffer, True)[emitted:cap]:
+            yield sentence
+            emitted += 1
+
+        if not emitted:
+            # A reasoning model can spend the whole token budget on hidden
+            # reasoning and finish with ZERO content tokens. Dead air on a
+            # live call is the worst possible outcome.
+            log.warning("Empty completion (finish_reason=%s, %d raw chars) - "
+                        "speaking the fallback line", finish_reason, len(buffer))
+            yield UNCLEAR_LINE
+
     # --------------------------------------------------------- groq streaming
     # Groq's reasoning models (gpt-oss, deepseek-r1, qwen3) emit hidden
     # reasoning tokens that COUNT AGAINST max_tokens and arrive on
@@ -332,6 +543,8 @@ class GroqBrain:
     _REASONING_MODELS = ("gpt-oss", "deepseek-r1", "qwen3", "-r1", "thinking")
     _MODEL_GONE = ("model_not_found", "does not exist", "decommissioned",
                    "has been deprecated", "no longer supported")
+    _RATE_LIMITED = ("rate_limit", "rate limit", "429", "too many requests",
+                     "tokens per minute", "requests per minute")
 
     def _build_kwargs(self, messages, model):
         kwargs = dict(
@@ -382,6 +595,22 @@ class GroqBrain:
                 and not any(x in m.lower() for x in _NOT_CHAT)]
         return sorted(chat, key=_sort_key)[0] if chat else None
 
+    def _spare_model(self):
+        """Another usable model to move to when this one is rate limited.
+
+        Each model id has its OWN tokens-per-minute bucket on Groq, so the
+        cheapest way through a 429 mid-call is sideways, not a sleep.
+        GROQ_FALLBACK_MODEL first because that is what it is for.
+        """
+        available = self._available_models()
+        spare = settings.groq_fallback_model
+        if spare and spare != self.model and spare in available:
+            return spare
+        candidates = [m for m in available
+                      if m != self.model and m not in _MODELS["dead"]
+                      and not any(x in m.lower() for x in _NOT_CHAT)]
+        return sorted(candidates, key=_sort_key)[0] if candidates else None
+
     def _resolve_model(self):
         """Check the configured model against the account BEFORE the caller is
         waiting on it, and substitute a real one if it is not there."""
@@ -421,7 +650,7 @@ class GroqBrain:
     def _open_stream(self, messages):
         self._resolve_model()
 
-        tried = []
+        tried, throttled = [], set()
         for _ in range(3):
             kwargs = self._build_kwargs(messages, self.model)
             try:
@@ -434,6 +663,22 @@ class GroqBrain:
                                 "without it", self.model)
                     kwargs.pop("reasoning_effort", None)
                     return self.client.chat.completions.create(**kwargs)
+
+                # THROTTLED. Not a broken model and not a broken request -
+                # just this id's quota for the minute. Move to another id
+                # rather than sleeping out the caller's patience, and only
+                # give up when there is nowhere left to go.
+                if any(k in msg for k in self._RATE_LIMITED):
+                    spare = self._spare_model()
+                    if spare and spare not in throttled:
+                        throttled.add(self.model)
+                        log.warning("Groq rate-limited %s - switching to %s for "
+                                    "the rest of this call", self.model, spare)
+                        self.model = spare
+                        continue
+                    log.error("Groq rate-limited and no spare model is free "
+                              "(tried %s)", ", ".join(sorted(throttled)) or self.model)
+                    raise
 
                 if not any(k in msg for k in self._MODEL_GONE):
                     raise

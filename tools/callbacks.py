@@ -48,6 +48,7 @@ def record(call_sid, caller_number, name=None, requirement=None,
     with _lock, _conn() as c:
         row = c.execute("SELECT id FROM callbacks WHERE call_sid=?",
                         (call_sid,)).fetchone()
+        created = row is None
         if row is None:
             c.execute(
                 "INSERT INTO callbacks (call_sid, caller_number, name, requirement,"
@@ -68,8 +69,16 @@ def record(call_sid, caller_number, name=None, requirement=None,
                 (name, requirement, preferred_time, caller_notified,
                  int(bool(agent_notified)), call_sid),
             )
-    log.info("Callback recorded: %s %s time=%s", caller_number, name or "",
-             preferred_time or "not specified")
+    # One call books ONE callback; record() is then called again as the name
+    # and the time arrive, and each of those logged an identical-looking
+    # "Callback recorded" line. Four of them for a single booking reads like
+    # four bookings in the console and in any log someone greps later.
+    if created:
+        log.info("Callback recorded: %s %s time=%s", caller_number, name or "",
+                 preferred_time or "not specified")
+    else:
+        log.debug("Callback updated: %s %s time=%s", caller_number, name or "",
+                  preferred_time or "not specified")
     return True
 
 

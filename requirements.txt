@@ -45,6 +45,15 @@ multidict==6.7.1
 numpy==1.26.4
 openai>=1.40
 onnxruntime==1.23.2
+# Caller timezone from the phone number. Needed to book an NRI's callback at
+# the right hour: +1 spans six US zones and +61 three Australian ones, and
+# only libphonenumber's area-code data resolves those correctly.
+phonenumbers>=8.13
+# The sales team's Excel call log (tools/call_log.py).
+openpyxl>=3.1
+# zoneinfo ships no timezone database on Windows - without this, every
+# ZoneInfo("Asia/Dubai") raises ZoneInfoNotFoundError.
+tzdata>=2024.1; platform_system == "Windows"
 packaging==26.3
 propcache==0.5.2
 protobuf==7.36.1

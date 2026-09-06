@@ -28,7 +28,9 @@ async def _warm_models():
 
     Kokoro's ONNX model loaded lazily inside the FIRST caller's greeting (1.0s
     on 2026-09-04) and Groq's model list was fetched in the middle of the first
-    real answer (0.36s). Neither belongs on a live call.
+    real answer (0.36s). Neither belongs on a live call - and neither does the
+    MiniLM embedder, which builds its ONNX session on the first retrieval and
+    charges that to whoever asks the first question.
     """
     missing = settings.missing()
     if missing:
@@ -45,6 +47,13 @@ async def _warm_models():
             GroqBrain().warmup()
         except Exception as e:
             log.error("LLM warmup failed: %s", e)
+        try:
+            # Builds the ONNX embedding session and opens Chroma, so the first
+            # caller's first question does not pay for either.
+            from rag.retriever import retrieve
+            retrieve("warm up the retriever")
+        except Exception as e:
+            log.error("RAG warmup failed: %s", e)
 
     await asyncio.get_running_loop().run_in_executor(None, _warm)
     log.info("✅ Models warm - ready for calls")
@@ -106,7 +115,7 @@ async def brochure_file():
 
 # ------------------------------------------------------------------ webhook
 
-@app.api_route("/voice", methods=["GET", "POST"])
+@app.post("/voice")
 async def voice_webhook(request: Request):
     log.info("🔥 /voice webhook HIT")
 
@@ -132,6 +141,13 @@ async def voice_webhook(request: Request):
     twiml = str(response)
     log.info("TwiML: %s", twiml)
     return Response(content=twiml, media_type="application/xml")
+
+
+@app.get("/voice")
+async def voice_webhook_probe(request: Request):
+    """Browser/health probe. Twilio always POSTs; a GET here just proves the
+    route is reachable through the tunnel and returns the same TwiML."""
+    return await voice_webhook(request)
 
 
 # ------------------------------------------------------------------ websocket

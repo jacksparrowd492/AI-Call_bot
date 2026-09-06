@@ -117,9 +117,9 @@ check("cache reports 2 hits", info.hits == 2, str(info))
 
 print("\n=== 5. real ingest into Chroma ===")
 _here = os.path.dirname(os.path.abspath(__file__))
-_data = os.path.join(_here, "data", "realestatedata.json")
+_data = os.path.join(_here, "data", "knowledge_base.json")
 if not os.path.exists(_data):
-    _data = os.path.join(_here, "..", "data", "realestatedata.json")
+    _data = os.path.join(_here, "..", "data", "knowledge_base.json")
 ingest.main(_data)
 n = retriever.count()
 check("collection is populated", n > 0, f"count={n}")
@@ -131,6 +131,17 @@ queries = {
     "what is the rera number": ["rera", "tn/", "3352"],
     "tell me about the water supply": ["water", "bhavani", "bore"],
     "what amenities do you have": ["park", "road", "amenit", "underground"],
+    # Transport returned nothing for weeks, because the collection had been
+    # built from a KB with no transport entry at all, and the bot asked what
+    # the caller meant instead of answering.
+    #
+    # Bare noun phrases - "transport service", which is how callers actually
+    # ask - are NOT asserted here on purpose. The stand-in embedder above is a
+    # hashed bag of words with no semantics, so a two-word query says nothing
+    # about whether the real MiniLM would match. That is what
+    # `python -m tools.ask_kb --check` is for, against the real vectors.
+    "how is the transport facility there": ["transport", "metro", "bus",
+                                            "connectivity"],
 }
 for q, expect in queries.items():
     ctx = retriever.retrieve(q, top_k=3)
@@ -187,13 +198,46 @@ finally:
 
 print("\n=== 10. weak matches are not context (the 'Hello?' trap) ===")
 # Nearest-neighbour search ALWAYS returns something. On the real call log
-# "Hello?" came back at d=1.673 and the bot tried to answer a greeting out of
-# the knowledge base. These queries share no tokens with any document, so they
-# sit at the far end of the distance range and any sane floor must drop them.
-for q in ("Hello?", "Hold on.", "zzz qqq"):
-    ctx = retriever.retrieve(q, top_k=3, max_distance=1.5)
-    check(f"smalltalk {q!r} -> empty context", ctx == "",
-          (ctx[:60].replace("\n", " ") + "...") if ctx else "")
+# "Hello?" came back at d=1.673 against RAG_MAX_DISTANCE=1.2, and the bot tried
+# to answer a greeting out of the knowledge base.
+#
+# What has to hold is that the FLOOR decides, and that is what is tested here.
+# Whether a particular phrase lands above or below it is a property of
+# all-MiniLM-L6-v2, and the stand-in embedder above is a hashed bag of words
+# with no semantics - it cannot answer that question, so it is not asked to.
+# (On a live call these never reach the retriever at all: bridge.py answers
+# greetings from the smalltalk guard, with no RAG and no LLM.)
+# Three words or more, so the short-turn allowance below is not in play here -
+# this loop is about the floor itself.
+for q in ("Hello there, can you hear me?", "Hold on a second.", "zzz qqq foo"):
+    best = retriever.search(retriever.embed_query(q), n_results=5)[0]["distance"]
+    check(f"{q!r} is dropped by a floor below its best match",
+          retriever.retrieve(q, top_k=3, max_distance=best - 0.01) == "",
+          "best d=%.3f" % best)
+    check(f"{q!r} is context only when the floor lets it be",
+          bool(retriever.retrieve(q, top_k=3, max_distance=best + 0.01)),
+          "best d=%.3f" % best)
+
+# A one- or two-word turn gets a documented allowance on top of the floor,
+# because the floor is calibrated on full questions and a bare noun is not one.
+# Measured on the real vectors: "water" sits at 1.328 against a floor of 1.20,
+# with the water supply entry as all three nearest documents.
+short = "water"
+best_short = retriever.search(retriever.embed_query(short),
+                              n_results=5)[0]["distance"]
+floor = best_short - 0.01
+check("a two-word turn is allowed past the sentence floor",
+      bool(retriever.retrieve(short, top_k=3, max_distance=floor)),
+      "best d=%.3f, floor %.3f + margin %.2f"
+      % (best_short, floor, retriever.SHORT_QUERY_MARGIN))
+check("but not past the floor plus its margin",
+      retriever.retrieve(short, top_k=3,
+                         max_distance=best_short
+                         - retriever.SHORT_QUERY_MARGIN - 0.01) == "",
+      "best d=%.3f" % best_short)
+check("and a longer turn gets no such allowance",
+      retriever.retrieve("tell me about the water supply here", top_k=3,
+                         max_distance=0.01) == "")
 
 check("a real question still gets context",
       bool(retriever.retrieve("what is the rera number", top_k=3)))
@@ -202,6 +246,78 @@ check("an impossible threshold drops everything",
 check("the floor defaults to settings.rag_max_distance",
       retriever.settings.rag_max_distance == 2.0,
       str(retriever.settings.rag_max_distance))
+
+print("\n=== 11. the shipped knowledge base builds the documents we expect ===")
+# The bug this guards: the live collection had been built from an older data
+# file with no transport entry, so "transport service" had nothing to match
+# and the bot answered it with a question, on every call, forever. These
+# checks need no embedder - they are about WHAT gets embedded.
+from rag import ingest                                      # noqa: E402
+
+KB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "data", "knowledge_base.json")
+kb_entries, kb_project = ingest.load_payload(KB_FILE)
+kb_docs, kb_ids, kb_metas = ingest.build_documents(kb_entries, kb_project)
+
+check("the authored KB schema loads", len(kb_entries) >= 39, str(len(kb_entries)))
+check("ids are unique", len(kb_ids) == len(set(kb_ids)),
+      "%d ids, %d unique" % (len(kb_ids), len(set(kb_ids))))
+check("chroma metadata stays scalar",
+      all(isinstance(v, (str, int, float, bool))
+          for m in kb_metas for v in m.values()))
+
+by_entry = {}
+for doc, _id, meta in zip(kb_docs, kb_ids, kb_metas):
+    by_entry.setdefault(meta.get("entry_id"), []).append((_id, doc))
+
+check("every entry is embedded under its own id",
+      all(e["id"] in by_entry for e in kb_entries),
+      str([e["id"] for e in kb_entries if e["id"] not in by_entry]))
+
+transport = by_entry.get("transport_connectivity", [])
+check("transport and connectivity is in the knowledge base", bool(transport))
+topic_docs = [d for i, d in transport if i.startswith("topic_")]
+check("it gets a TOPIC document, which is what a bare noun matches",
+      len(topic_docs) == 1, str([i for i, _ in transport if i.startswith("topic_")]))
+if topic_docs:
+    t = topic_docs[0].lower()
+    check("the topic document carries the caller's own words",
+          all(w in t for w in ("transport", "metro", "bus", "commute")), t[:80])
+    # Short ON PURPOSE. "water" against sixty words of answer lands past the
+    # distance threshold and comes back empty - measured against the real
+    # vectors, not guessed. The answer rides in the metadata instead.
+    check("and NOT the answer, so a two-word turn stays close to it",
+          "a: " not in t and len(t.split()) < 25, "%d words" % len(t.split()))
+
+topic_meta = [m for m, i in zip(kb_metas, kb_ids)
+              if i == "topic_%d" % next(n for n, e in enumerate(kb_entries)
+                                        if e["id"] == "transport_connectivity")]
+check("the answer travels in the metadata",
+      bool(topic_meta) and "metro station" in topic_meta[0].get("answer", ""),
+      str(topic_meta[0].get("answer", "")[:60]) if topic_meta else "")
+expanded = retriever.build_context([{"document": topic_docs[0],
+                                     "meta": topic_meta[0]}])
+check("and build_context puts it back, so a topic hit is still an answer",
+      "A: " in expanded and "metro station" in expanded
+      and "Key facts:" in expanded, expanded[:70].replace("\n", " "))
+check("an ordinary Q/A document is not double-answered",
+      retriever.build_context([{"document": "Category: X\nQ: q\nA: real",
+                                "meta": {"answer": "real"}}])
+      == "Category: X\nQ: q\nA: real")
+
+check("every entry with keywords gets exactly one topic document",
+      all(len([i for i, _ in by_entry.get(e["id"], []) if i.startswith("topic_")]) == 1
+          for e in kb_entries if e["keywords"] or e["topic"]))
+
+# The intent metadata retrieve() filters on has to exist, or the filtered
+# search returns nothing and the caller is told we have no information.
+check("location entries are tagged location",
+      by_entry["transport_connectivity"]
+      and all(m["intent"] == "location" for m in kb_metas
+              if m.get("entry_id") == "transport_connectivity"))
+check("intent is only ever a bucket retrieve() knows",
+      {m["intent"] for m in kb_metas} <= {"location", "contact", "price", "general"},
+      str(sorted({m["intent"] for m in kb_metas})))
 
 print("\n" + "=" * 60)
 print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

@@ -84,6 +84,22 @@ REQUIRED_ESCALATIONS = [
 # would be a misrepresentation, so the KB entry must carry status=proposed.
 MUST_BE_PROPOSED = ["school_inside", "shopping_mall", "recreational_club"]
 
+# Topics real callers asked about on real calls, and the entry that has to
+# cover each one. "Transport service." was said on the 2026-09-02 call and the
+# bot answered it with a question, because the collection it was searching had
+# been built from an older data file that had no transport entry at all. A
+# missing entry here is that failure, before it reaches a caller.
+CALLER_TOPICS = {
+    "transport_connectivity": ["transport", "metro", "bus", "commute"],
+    "amenities_full": ["amenities"],
+    "water_supply": ["water"],
+    "security": ["security"],
+    "nearby_schools": ["school"],
+    "parks": ["park"],
+    "roads": ["road"],
+    "electricity": ["power", "electricity"],
+}
+
 # Phrases that must NEVER appear in a spoken answer - they reveal the bot is
 # reading a document, which the system prompt forbids.
 FORBIDDEN_IN_ANSWERS = [
@@ -160,6 +176,27 @@ def main():
             failures.append("%s answer is %d words - too long for a phone call"
                             % (e["id"], n))
 
+    # 7. every topic a caller has actually raised has an entry, and that entry
+    # carries the keywords the topic document is built from. A caller who says
+    # a bare noun - "transport service" - matches on those keywords, not on a
+    # question-shaped phrasing.
+    for eid, words in CALLER_TOPICS.items():
+        e = by_id.get(eid)
+        if not e:
+            failures.append("no entry %s - a caller asking about %s gets nothing"
+                            % (eid, words[0]))
+            continue
+        haystack = norm(" ".join([e.get("topic", ""), e.get("answer", "")]
+                                 + list(e.get("keywords") or [])
+                                 + list(e.get("questions") or [])))
+        for w in words:
+            if w not in haystack:
+                failures.append("%s never mentions %r, so a caller who says it "
+                                "will not match" % (eid, w))
+        if not (e.get("keywords") or e.get("topic")):
+            failures.append("%s has no topic or keywords - rag.ingest builds no "
+                            "topic document for it" % eid)
+
     print("KB CHECK")
     print("  entries            : %d" % len(entries))
     print("  escalation topics  : %d" % len(escalations))
@@ -168,6 +205,7 @@ def main():
              + sum(len(e["questions"]) for e in escalations)))
     print("  brochure facts     : %d checked, %d missing"
           % (len(BROCHURE_FACTS), len(missing)))
+    print("  caller topics      : %d checked" % len(CALLER_TOPICS))
     print("  proposed entries   : %s"
           % ", ".join(e["id"] for e in entries if e.get("status") == "proposed"))
 

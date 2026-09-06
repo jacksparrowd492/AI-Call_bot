@@ -21,6 +21,8 @@ import logging
 import re
 from difflib import SequenceMatcher
 
+from config import settings
+
 log = logging.getLogger("jarvis.vocab")
 
 # Canonical spellings the knowledge base and the caller both care about.
@@ -141,6 +143,39 @@ def repair(text: str):
     return out, fixes
 
 
+# Ordinary English words, boosted but NEVER repaired. These are the topics
+# callers actually ask about, and the recogniser mangles them exactly like any
+# other unexpected word on a noisy phone line: "infrastructure and water
+# supply" came back as "Infrastructure and, how many days?" on the 2026-09-06
+# call, and the bot then answered half the question and offered a callback for
+# a fact it was holding all along. They are kept out of LEXICON on purpose -
+# repairing a caller's real word into one of these would be worse than the
+# mishearing it fixes.
+TOPIC_TERMS = [
+    "transport", "transportation", "connectivity", "infrastructure",
+    "water", "supply", "borewell", "sewage", "drainage", "electricity",
+    "amenities",
+]
+
+# Boosting is not free in both directions. The first cut of TOPIC_TERMS also
+# carried "security", "facilities", "layout", "plot" and friends - ordinary
+# words the model already knows - and the very next test call answered "my
+# name is Karthi" with "security". A boosted word is a word the recogniser
+# reaches for when it is unsure, and the moment it is unsure most is a name it
+# has never heard. Only terms that were actually mangled on a call stay in the
+# list above, and names get a boost of their own to compete with them.
+#
+# NAME_TERMS is for BOOSTING ONLY and is deliberately not in LEXICON: repairing
+# a caller's real word into one of these would invent a name they never said.
+NAME_TERMS = [
+    "Karthi", "Karthik", "Bharath", "Barath", "Vignesh", "Praveen", "Naveen",
+    "Ramesh", "Suresh", "Dinesh", "Mahesh", "Arun", "Anand", "Ashok", "Balaji",
+    "Deepak", "Gowtham", "Hari", "Jagan", "Kumar", "Manoj", "Muthu", "Prakash",
+    "Prasad", "Priya", "Rajesh", "Ravi", "Sanjay", "Saravanan", "Senthil",
+    "Siva", "Sundar", "Surya", "Vijay", "Vinoth", "Aravind", "Dhanush",
+]
+
+
 def deepgram_keywords():
     """Keyword-boost list for the Deepgram query string.
 
@@ -153,4 +188,19 @@ def deepgram_keywords():
         # The project name matters most; everything else gets a lighter nudge.
         intensity = 3 if term in ("Karthipuram", "Unnamalai", "Neelambur") else 2
         boosted.append("%s:%d" % (term, intensity))
+    # A light nudge only. These are real English words the model already
+    # knows, so they need a thumb on the scale, not a shove - boosting a
+    # common word hard makes the recogniser hear it where it was not said.
+    for term in TOPIC_TERMS:
+        boosted.append("%s:1" % term)
+    # Names get more weight than topics, because the one turn where the
+    # recogniser has no context to fall back on is "may I have your name?".
+    for term in NAME_TERMS:
+        boosted.append("%s:2" % term)
+    # Whatever this deployment adds in DEEPGRAM_EXTRA_KEYWORDS, hardest of
+    # all - it is there because somebody watched it go wrong.
+    for term in (settings.deepgram_extra_keywords or "").split(","):
+        term = term.strip()
+        if term:
+            boosted.append("%s:3" % term)
     return boosted
