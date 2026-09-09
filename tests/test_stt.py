@@ -206,6 +206,39 @@ async def main():
     check("the reply survives a trailing UtteranceEnd",
           spoke == ["what is the rera number?"], str(spoke))
 
+    # ------------------------------------------------------------------
+    print("\n=== 12. a one-word turn that is the PROJECT NAME survives ===")
+    # The reported bug: "it only answers if I say 'Karthipuram project', not
+    # 'Karthipuram'". A single word must clear STT_SHORT_CONFIDENCE (0.75)
+    # because that is the shape background noise arrives in - but the project's
+    # own name is also the word the recogniser is worst at, so it arrived as
+    # one word at low confidence and was dropped before the caller's question
+    # ever reached the knowledge base.
+    from stt import DeepgramStream, PROJECT_WORDS                # noqa: E402
+
+    junk = DeepgramStream._is_junk
+
+    check("bare 'Karthipuram' at 0.68 is KEPT",
+          junk("Karthipuram", 0.68) == "", junk("Karthipuram", 0.68))
+    check("...and so is 'Neelambur'",
+          junk("Neelambur", 0.62) == "", junk("Neelambur", 0.62))
+    check("two words were never the problem and still are not",
+          junk("Karthipuram project", 0.68) == "")
+    check("a one-word ANSWER still passes, as before",
+          junk("yes", 0.60) == "")
+    check("but an ordinary unclear single word is STILL dropped",
+          junk("shopping", 0.60).startswith("single unclear word"),
+          junk("shopping", 0.60))
+    check("...and a high-confidence single word passes either way",
+          junk("shopping", 0.95) == "")
+    check("a filler word is still a filler word",
+          junk("um", 0.99) != "")
+    check("low confidence still fails whatever the word",
+          junk("Karthipuram", 0.30).startswith("low confidence"),
+          junk("Karthipuram", 0.30))
+    check("the allowlist is lowercase, as _is_junk compares lowercased",
+          all(w == w.lower() for w in PROJECT_WORDS), str(PROJECT_WORDS))
+
     print("\n" + "=" * 60)
     print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")
     if FAIL:

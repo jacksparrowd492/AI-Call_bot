@@ -127,6 +127,33 @@ their callback, because the number that rang us is enough to act on.
 `8 pm tomorrow` from New Jersey is `5:30 AM IST` the following day - which is
 the whole point of doing this rather than writing down "8 pm".
 
+## How an answer is found
+
+Retrieval has **two arms**, and a caller turn has to satisfy at least one of
+them or it gets the not-found line and a callback offer.
+
+1. **Vectors** (`rag/retriever.py`) - all-MiniLM-L6-v2 over ChromaDB, gated by
+   L2 distance. Good at meaning, weak at a rare word inside a long document.
+2. **Keywords** (`rag/lexical.py`) - BM25, gated by its own score floor and a
+   filler lexicon. Good at exactly what the embedder is weak at: `sports`,
+   `basketball`, `1882`, `Athikadavu`, `RERA`.
+
+The two are merged by Reciprocal Rank Fusion, which combines their *rankings*
+rather than their scores - an L2 distance and a BM25 score are not on the same
+scale, and no blend of the two numbers means anything.
+
+Each arm is gated **before** fusion, so fusion can only ever re-order what
+already survived. That is what keeps an empty result meaning "the knowledge
+base does not cover this" rather than "the ranking was unlucky".
+
+Why two arms at all: `cricket` was answered instantly and `sports` returned
+nothing, because `cricket` was a keyword on a short topic document and `sports`
+existed only inside a sixty-word answer. Raising the distance ceiling could not
+reach it - a short query's ceiling is already 1.75 and a greeting measures
+1.673. See CHANGELOG, 2026-09-09.
+
+    python tests/test_lexical.py      # runs offline: no model, no network
+
 ## The sales call log
 
 Every call appends a row to `data/call_log.xlsx` (`CALL_LOG_PATH`): date, start
@@ -161,6 +188,9 @@ Open defects and the change history live in `CHANGELOG.md`.
   left over from queueing mid-reply turns and from the timezone note's wording,
   and **two real ones** where a name is not extracted and the caller is asked
   again. See CHANGELOG.
+- Basketball and tennis are stated as what the layout plan *shows*, not as
+  committed amenities: they appear only in brochure renders, and the brochure
+  disclaims its own images. Confirm with the sales team before promising them.
 
 ## Quick start
 
@@ -205,7 +235,8 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 | Echo gate and barge-in | `audio_utils.py` | `NoiseGate`, `BargeInDetector` |
 | Callback intent | `handoff_intent.py` | did they ask for a person, accept an offer, give a name or a time |
 | Ask the KB directly | `tools/ask_kb.py` | `python -m tools.ask_kb --check` - real embedder, real store, the phrasings callers actually used |
-| Knowledge base | `rag/` | ingest + retrieve (ChromaDB + MiniLM). **Editing `data/knowledge_base.json` changes nothing until `python -m rag.ingest` is re-run** - the vectors are a build artefact of that file |
+| Knowledge base | `rag/` | ingest + retrieve (ChromaDB + MiniLM). **Editing the KB changes nothing until `python -m rag.ingest` is re-run** - the vectors are a build artefact of that file |
+| Keyword search | `rag/lexical.py` | BM25 over the same documents, fused with the vectors. No model, no network, no dependency |
 | Rebuild the KB JSON | `build_kb.py` | assembles `data/knowledge_base.json` from `kb_part1/2` + `kb_escalation` |
 | Sales call log | `tools/call_log.py` | Excel sheet, one row per call |
 | Callback records | `tools/callbacks.py` | one `callbacks` row per booking, in `leads.db` (`LEAD_STORE_PATH`) |

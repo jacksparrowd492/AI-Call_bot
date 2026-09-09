@@ -54,6 +54,20 @@ SHORT_ANSWERS = {
     "thanks",
 }
 
+# One-word turns that are a QUESTION rather than an answer, and must survive
+# the short-turn confidence rule for the same reason SHORT_ANSWERS do.
+#
+# "Karthipuram" said on its own is the single most likely opening a caller has,
+# and it is also the exact word the recogniser is worst at - the call logs have
+# it as "Cartigram", "Kartivaram" and "Artipuram". So it arrived as one word at
+# low confidence and was thrown away before vocab.repair() ever saw it, and the
+# caller got silence for saying the name of the project they had rung about.
+# Two words ("Karthipuram project") sailed through, which is exactly the
+# "it only answers if I say it the long way" report this came from.
+PROJECT_WORDS = {
+    "karthipuram", "karthi", "neelambur", "coimbatore", "unnamalai",
+}
+
 def _boost_param(model: str) -> str:
     """nova-2 takes `keywords`, nova-3 renamed it to `keyterm`.
 
@@ -288,6 +302,7 @@ class DeepgramStream:
         # more of it than of a sentence - unless it is one of the words a
         # caller genuinely answers with.
         if (len(words) == 1 and words[0] not in SHORT_ANSWERS
+                and words[0] not in PROJECT_WORDS
                 and confidence and confidence < settings.stt_short_confidence):
             return f"single unclear word {words[0]!r} at {confidence:.2f}"
         return ""

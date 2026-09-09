@@ -50,6 +50,29 @@ CALLER_PHRASINGS = [
     "what is the contact number",
     "how many acres",
     "what is the rera number",
+    # 2026-09-09: the caller who asked about sport. "cricket" was answered
+    # instantly and "sports" returned nothing, because "cricket" is a keyword
+    # on the short topic document and "sports" only ever appeared inside a
+    # sixty-word answer. These are the phrasings the hybrid arm exists for.
+    "sports",
+    "what sports facilities are there",
+    "basketball",
+    "games",
+    "is there a gym",
+    "swimming pool",
+    # ...and the caller who said only the project's name.
+    "karthipuram",
+    # Category questions, which callers ask far more often than the KB's
+    # thing-by-thing shape assumed.
+    "education",
+    "hospitals",
+    "shopping",
+    "what about utilities",
+    # Straight off the brochure's location map, which nothing had mined until
+    # the 2026-09-09 pass.
+    "prozone mall",
+    "how far is the railway station",
+    "athikadavu water",
 ]
 
 # Must return NOTHING. Nearest-neighbour search always returns something, so

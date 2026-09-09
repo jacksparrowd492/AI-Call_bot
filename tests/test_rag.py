@@ -210,7 +210,15 @@ print("\n=== 10. weak matches are not context (the 'Hello?' trap) ===")
 # Three words or more, so the short-turn allowance below is not in play here -
 # this loop is about the floor itself.
 for q in ("Hello there, can you hear me?", "Hold on a second.", "zzz qqq foo"):
-    best = retriever.search(retriever.embed_query(q), n_results=5)[0]["distance"]
+    # n_results has to MATCH what retrieve() searches with internally. Asking
+    # for 5 here and comparing against a call that asks for 30 made this flaky:
+    # Chroma's HNSW index is approximate, so the wider search sometimes found a
+    # nearer document than the narrow one had, and `best - 0.01` was then not
+    # actually below the best. Measured over repeated runs the same phrase came
+    # back at 1.626, 1.676, 1.704 and 1.720. (Pre-existing; it has nothing to do
+    # with the lexical arm - it reproduces with that arm disabled.)
+    best = retriever.search(retriever.embed_query(q),
+                            n_results=max(3 * 10, 20))[0]["distance"]
     check(f"{q!r} is dropped by a floor below its best match",
           retriever.retrieve(q, top_k=3, max_distance=best - 0.01) == "",
           "best d=%.3f" % best)
@@ -224,25 +232,57 @@ for q in ("Hello there, can you hear me?", "Hold on a second.", "zzz qqq foo"):
 # with the water supply entry as all three nearest documents.
 short = "water"
 best_short = retriever.search(retriever.embed_query(short),
-                              n_results=5)[0]["distance"]
+                              n_results=max(3 * 10, 20))[0]["distance"]
 floor = best_short - 0.01
 check("a two-word turn is allowed past the sentence floor",
       bool(retriever.retrieve(short, top_k=3, max_distance=floor)),
       "best d=%.3f, floor %.3f + margin %.2f"
       % (best_short, floor, retriever.SHORT_QUERY_MARGIN))
-check("but not past the floor plus its margin",
-      retriever.retrieve(short, top_k=3,
-                         max_distance=best_short
-                         - retriever.SHORT_QUERY_MARGIN - 0.01) == "",
-      "best d=%.3f" % best_short)
-check("and a longer turn gets no such allowance",
-      retriever.retrieve("tell me about the water supply here", top_k=3,
-                         max_distance=0.01) == "")
 
+# ---------------------------------------------------------------------------
+# The three checks below measure a property of the DISTANCE FLOOR, so the
+# lexical arm is held off for them.
+#
+# Since 2026-09-09 retrieval has two arms, and the lexical one answers on term
+# overlap without consulting the distance at all - that is the entire point of
+# it, and it is why "sports" is answerable now. Left switched on, it answers
+# every one of these regardless of the threshold and the floor being measured
+# becomes unobservable. Holding it off keeps the original assertions honest
+# instead of deleting them; the hybrid contract is asserted separately below.
+from rag import lexical                                          # noqa: E402
+_real_search = lexical.search
+lexical.search = lambda *a, **k: []
+try:
+    check("but not past the floor plus its margin",
+          retriever.retrieve(short, top_k=3,
+                             max_distance=best_short
+                             - retriever.SHORT_QUERY_MARGIN - 0.01) == "",
+          "best d=%.3f" % best_short)
+    check("and a longer turn gets no such allowance",
+          retriever.retrieve("tell me about the water supply here", top_k=3,
+                             max_distance=0.01) == "")
+    check("an impossible threshold drops the vector arm entirely",
+          retriever.retrieve("what is the rera number", max_distance=0.0) == "")
+finally:
+    lexical.search = _real_search
+
+# --------------------------------------------------------- the hybrid contract
+print("\n=== 10b. hybrid: the lexical arm answers what the floor cannot ===")
 check("a real question still gets context",
       bool(retriever.retrieve("what is the rera number", top_k=3)))
-check("an impossible threshold drops everything",
-      retriever.retrieve("what is the rera number", max_distance=0.0) == "")
+# The reported bug, as a test. "sports" appears nowhere in a question phrasing
+# or a keyword list - only inside a long answer and its facts - so no distance
+# threshold reaches it. Term overlap does.
+check("'sports' is answered even with the vector floor shut to zero",
+      bool(retriever.retrieve("sports", top_k=3, max_distance=0.0)))
+check("'basketball' likewise", bool(retriever.retrieve("basketball", top_k=3,
+                                                       max_distance=0.0)))
+# ...and the guard on the other side, which matters more than any of it: an
+# arm that answers without consulting distance must still refuse a greeting.
+for noise in ("hello", "okay thank you", "hold on a second",
+              "my name is karthi", "that sounds good", "zzz qqq foo"):
+    check("hybrid still returns NOTHING for %r" % noise,
+          retriever.retrieve(noise, top_k=3, max_distance=0.0) == "")
 check("the floor defaults to settings.rag_max_distance",
       retriever.settings.rag_max_distance == 2.0,
       str(retriever.settings.rag_max_distance))

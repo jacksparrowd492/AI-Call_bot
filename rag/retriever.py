@@ -30,6 +30,7 @@ import threading
 from functools import lru_cache
 
 from config import settings
+from rag import lexical
 
 try:
     import chromadb
@@ -340,6 +341,44 @@ def _split_clauses(query: str):
     return parts
 
 
+RRF_K = 60          # the standard Reciprocal Rank Fusion constant.
+
+
+def _fuse(vector_hits, lexical_hits):
+    """Merge the two arms by Reciprocal Rank Fusion.
+
+    RANKS are fused, never scores. An L2 distance (lower is better, roughly
+    0.8-1.8 here) and a BM25 score (higher is better, unbounded, 2-13 here) are
+    not on the same scale and no blend of the two numbers means anything. Their
+    ORDERINGS are comparable, which is the whole point of RRF: a document gets
+    1/(k+rank) from each arm that ranked it, so agreement between the two arms
+    beats a strong showing in either one alone.
+
+    Both input lists are ALREADY GATED by their own arm - the vector list by
+    distance, the lexical list by BM25 score and rarity. Fusion only orders
+    what survived; it can never resurrect something both arms rejected, which
+    is what keeps "no context" meaning "the KB does not cover this".
+    """
+    fused, first_seen = {}, {}
+    for arm in (vector_hits, lexical_hits):
+        for rank, hit in enumerate(arm):
+            meta = hit.get("meta") or {}
+            key = hit.get("id") or meta.get("entry_id") or hit.get("document")
+            fused[key] = fused.get(key, 0.0) + 1.0 / (RRF_K + rank + 1)
+            # Keep the VECTOR copy when both arms found the same document: it
+            # carries a real distance, which the logs and tools/ask_kb read.
+            if key not in first_seen or first_seen[key].get("distance") is None:
+                first_seen[key] = hit
+
+    out = []
+    for key, score in fused.items():
+        hit = dict(first_seen[key])
+        hit["rrf"] = score
+        out.append(hit)
+    out.sort(key=lambda h: -h["rrf"])
+    return out
+
+
 def _close_hits(query: str, top_k: int, max_distance: float,
                 short_margin: bool = True):
     """The hits for ONE query that are close enough to be used. [] means the
@@ -409,17 +448,41 @@ def _close_hits(query: str, top_k: int, max_distance: float,
                  str(query)[:60], hits[0]["distance"])
         close = hits[:1]
 
-    if not close:
+    # STEP 5: the LEXICAL arm, which is a different KIND of match rather than a
+    # looser version of the same one.
+    #
+    # MiniLM fails on a rare word buried in a long document: measured on this
+    # KB, "cricket" was answered instantly (it is a keyword on the short topic
+    # document) while "sports" returned nothing, because "sports" only ever
+    # appeared inside a sixty-word answer plus its facts. That is not something
+    # a threshold can reach - the ceiling for a short query is already 1.75 and
+    # a greeting measured 1.673, so there is no room left to give away.
+    #
+    # BM25 scores term overlap weighted by rarity, so it is strongest on
+    # exactly what the embedder is weakest on. It carries its own noise gate
+    # (rag.lexical.MIN_SCORE and a filler lexicon), pinned by tests on both
+    # sides, so it cannot answer a greeting either.
+    lex = lexical.search(query, n_results=max(top_k * 5, 10))
+
+    if not close and not lex:
         # The number quoted here is the one the hit was actually measured
         # against, including the fallback margin only where the fallback could
         # have applied. It read 0.35 too high on every other intent.
         ceiling = relaxed_distance + (FALLBACK_MARGIN
                                       if intent in ("location", "contact") else 0.0)
-        log.info("RAG: best match for %r is %.3f, past %.2f - no context",
-                 str(query)[:60], hits[0]["distance"], ceiling)
+        log.info("RAG: best match for %r is %.3f, past %.2f, and nothing "
+                 "lexical - no context", str(query)[:60],
+                 hits[0]["distance"], ceiling)
         return []
 
-    return close
+    if lex and not close:
+        log.info("RAG: vector arm found nothing within %.2f for %r (best "
+                 "d=%.3f) - answered LEXICALLY (%s, score=%.2f)",
+                 relaxed_distance, str(query)[:50], hits[0]["distance"],
+                 (lex[0].get("meta") or {}).get("entry_id", "?"),
+                 lex[0].get("score", 0.0))
+
+    return _fuse(close, lex)
 
 
 def retrieve(query: str, top_k: int = None, max_distance: float = None) -> str:
@@ -464,12 +527,17 @@ def retrieve(query: str, top_k: int = None, max_distance: float = None) -> str:
     if not close:
         return ""
 
-    close.sort(key=lambda h: h["distance"])
+    # Ordered by FUSED rank, not by distance: a lexical-only hit has no
+    # distance at all, and sorting a mixed list on one arm's metric would put
+    # whatever the other arm found at the bottom regardless of how good it was.
+    close.sort(key=lambda h: -h.get("rrf", 0.0))
     top = dedupe_by_entry(close, top_k)
 
-    log.info("RAG: results=%d | best_d=%.3f | top=%s",
-             len(top), top[0]["distance"] if top else 2.0,
-             (top[0]["document"][:80] + "...") if top else "<empty>")
+    if top:
+        best_d = top[0].get("distance")
+        log.info("RAG: results=%d | best_d=%s | top=%s", len(top),
+                 ("%.3f" % best_d) if best_d is not None else "lexical",
+                 top[0]["document"][:80] + "...")
 
     return build_context(top)
 

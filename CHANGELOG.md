@@ -6,6 +6,182 @@ diagnosis notes get folded in here rather than kept as separate files.
 
 ---
 
+## 2026-09-09 (later) — hybrid retrieval, and the brochure's images
+
+Reported from live calls: *"it only answers if I say 'Karthipuram project',
+not 'Karthipuram'"*, and *"it answers about cricket but not about sports"*.
+
+Two different bugs wearing one costume.
+
+### Why "sports" failed and "cricket" did not
+
+`rag/ingest.py` embeds two SHAPES of document: one long one per question
+phrasing (question + answer + every fact), and one SHORT topic document per
+entry (category, topic, keywords, and deliberately no answer). A bare noun
+phrase from a caller matches the short one; that is what it is for.
+
+"cricket" is a keyword on the `parks` topic document, so it matched a
+twenty-token document almost exactly. **"sports" appeared in no keyword list
+and in no question phrasing anywhere in the knowledge base** - only inside
+`parks`' and `amenities_full`'s facts, as "Adult sports area". Its only homes
+were the long documents, and embedding distance grows with everything in a
+document the query does not account for, so a one-word query against a
+sixty-word answer plus twenty-five facts lands out with the noise.
+
+**The threshold could not be opened any further to reach it.** A short query
+already gets `RAG_MAX_DISTANCE` 1.5 plus `SHORT_QUERY_MARGIN` 0.25 = 1.75, and
+a greeting measured 1.673 on the real store. The acceptance ceiling and the
+noise floor are the same number; there is nothing left to give away. So the fix
+had to be a different KIND of matching, not a looser threshold on the same one.
+
+### `rag/lexical.py` — BM25 alongside the vectors
+
+Term overlap weighted by rarity. Strongest on exactly what a dense embedder is
+weakest on: `sports`, `basketball`, `1882`, `Athikadavu`, `RERA`, `D-Mart`.
+
+Built from the same `build_documents()` call the vectors come from, so the two
+arms can never search different corpora. ~20ms for 391 documents, lazily, once.
+
+**Written out rather than pulled from PyPI**, at about sixty lines. The deploy
+is `pip install -r requirements.txt` on a Windows box and every dependency is
+one more thing that can fail there on the morning of a demo - and the IDF table
+had to be readable anyway, for the gate below.
+
+`retriever._fuse()` merges the arms by **Reciprocal Rank Fusion** (k=60). Ranks,
+never scores: an L2 distance (lower is better, 0.8-1.8 here) and a BM25 score
+(higher is better, 2-13 here) are not on the same scale and no blend of the two
+numbers means anything. Their orderings are comparable, and a document both
+arms found beats a document only one of them liked.
+
+Both arms are gated INDEPENDENTLY before fusion - the vector arm by the
+existing distance floor, untouched; the lexical arm by its own score floor.
+Fusion only orders what already survived, so it can never resurrect something
+both arms rejected. `retrieve()` returning `""` still means "the KB does not
+cover this", which is the contract the not-found line and the callback offer
+are built on.
+
+### The gate, which is the part that took the measuring
+
+A score floor alone does not work, and neither does the obvious alternative.
+Measured against the shipped KB:
+
+    my name is karthi        7.99      <- must be rejected
+    that sounds good         5.59      <- must be rejected
+    cricket                  2.77      <- must be answered
+    amenities                2.58      <- must be answered
+
+No threshold separates those. **Rarity does not either**, which is the trap
+worth recording: "name" appears in exactly ONE of the 391 documents and
+therefore has the HIGHEST idf in the whole corpus, while "amenities" appears in
+99 and has one of the lowest. IDF measures how rare a word is in the brochure,
+not how conversational it is, and those are different things.
+
+What works is a filler lexicon - the same device `stt.FILLERS` already is, one
+layer further in. Ordinary conversation words that happen to collide with
+brochure prose: "fine" from "fine dining", "right" and "now" from the
+disclaimer, "evening" from the office hours, and the spelled-out digits, so a
+caller reading out a phone number never looks like a query. After it:
+
+    36 / 36 caller phrasings off the real call logs  -> answered
+    29 / 29 noise and non-question turns             -> nothing
+
+`MIN_SCORE = 2.0` then sits below the lowest real turn (2.58) with every noise
+turn at 0.00.
+
+### The one-word turn — a different bug entirely
+
+Nothing to do with retrieval. `stt._is_junk()` requires a single-word turn to
+clear `STT_SHORT_CONFIDENCE` (0.75), because one word is the shape background
+noise arrives in. "Karthipuram" is also the word the recogniser is worst at -
+the logs have it as "Cartigram", "Kartivaram", "Artipuram" - so it arrived as
+one word at low confidence and was **discarded before RAG, the LLM or anything
+else ever saw it**. Two words sailed through. That is the whole of "it only
+answers if I say it the long way".
+
+`PROJECT_WORDS` now exempts the project's own vocabulary, exactly as
+`SHORT_ANSWERS` already exempts "yes" and "no". An ordinary unclear single word
+is still dropped.
+
+(`vocab.repair()` was already running before `_is_junk()`, not after. An
+earlier note in this file said otherwise; it was wrong.)
+
+### Knowledge base: 39 -> 44 entries, 310 -> 344 phrasings
+
+An audit of all 24 brochure pages against the KB found the PROSE almost fully
+covered - Athikadavu and Pillur Dam, all six schools, all five colleges, the
+hotels, the temples, DTCP 100/2023, RERA TN/11/Layout/3352/2025, the
+1815-2025 Coimbatore timeline, the whole Unnamalai milestone list.
+
+What had never been mined was the **renders and the page-23 location map**.
+Whoever built the KB worked from the text and the bullet lists, which is why
+half a sales map was missing:
+
+- New `sports_recreation`, and the roll-ups `education_overview`,
+  `utilities_overview`, `shopping_overview`, `healthcare_nearby`. The KB was
+  organised by THING (parks, club, media tower) and callers ask by CATEGORY
+  ("sports", "schools", "power and water"). That mismatch is the general form
+  of the "sports" bug, not a one-off.
+- `nearby_landmarks` gains Prozone Mall, Fun Mall, LuLu Hypermarket, Tidel and
+  Global IT Park, SVB Tech Park, both railway stations, Isha Yoga, Ukkadam
+  Lake, Sulur Boat House, Maharaja Theme Park, Defence Industry Park, the
+  Cricket Grounds and the DCC Cricket Club.
+- `nearby_colleges` gains the eight institutions the map names but the text
+  list did not.
+- Keyword enrichment across the existing entries, in callers' words rather than
+  the brochure's.
+
+**Basketball and tennis are hedged on purpose.** Both appear ONLY in renders,
+with no brochure text committing to them and a p.24 disclaimer calling every
+image "purely indicative... representative purpose only". The bot says the
+layout plan shows them and that the team can confirm what is committed. A
+recorded sales call is not the place to promise a tennis court that no document
+does, and the KB's own `source_note` already says the brochure's silences are
+routed, not invented.
+
+One keyword was pulled back out: `"karthi puram"` on `project_overview`
+tokenizes to the bare token "karthi", an ordinary first name, and made "my name
+is Karthi" the single highest-scoring noise phrase in the whole set. Deepgram
+splitting the word is `vocab.repair()`'s job.
+
+### Tests
+
+`tests/test_lexical.py` is new: 31 checks, and they run **without the embedder**,
+which is the point - the lexical arm is arithmetic over a shipped JSON file, so
+unlike the vector arm it can be verified offline on any machine before a call
+is placed. It pins the gate from both sides, all 36 caller phrasings and all 29
+noise turns, plus the fusion algebra.
+
+`tests/test_rag.py` 65/65 (was 55/57). Three checks there asserted the distance
+floor was the ONLY gate, which hybrid deliberately makes untrue; they now run
+with the lexical arm held off, so they still measure the floor, and section 10b
+asserts the hybrid contract separately - including that "sports" is answered
+with the vector floor shut to zero, and that six noise turns still get nothing.
+
+Two of its checks were also **flaky before this pass and are now fixed**: they
+computed a best distance with `n_results=5` and compared it against
+`retrieve()`, which searches with 30. Chroma's HNSW index is approximate, so
+the wider search sometimes found a nearer document and `best - 0.01` was not
+below the best after all. The same phrase measured 1.626, 1.676, 1.704 and
+1.720 across four runs. Confirmed independent of this change - it reproduces
+with the lexical arm disabled.
+
+`test_stt.py` 40/40 (nine new, on the one-word gate). `test_handoff` 80/80,
+`test_scheduling` 43/43, `test_tts` 14/14, `test_llm` 43/43,
+`test_latency_noise` 45/45. `test_bridge` is unchanged at 59/63 - the same four
+pre-existing failures, two stale and two real, untouched here.
+
+### Not done
+
+The embedding model was **not** changed, though it was asked for. Both
+`huggingface.co` and Chroma's model S3 are unreachable from this environment,
+so a swap could have been written but never run - and every threshold in
+`retriever.py` is calibrated to MiniLM's distance scale, so changing the model
+invalidates all of them at once. Hybrid gets the accuracy without betting the
+booking flow on unmeasured numbers. Revisit it as its own change, with
+`tools/ask_kb --check` as the before/after.
+
+---
+
 ## 2026-09-09 — back to one language, and the dead code is gone
 
 Two things in one pass: the multilingual layer is **removed**, and every file
