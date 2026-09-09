@@ -1,0 +1,868 @@
+{
+  "schema_version": 1,
+  "document": {
+    "title": "Karthipuram Brochure",
+    "source_file": "brochure.pdf",
+    "page_count": 24,
+    "page_size_pts": "1720 x 1330 (landscape)",
+    "pdf_creation_date": "2026-04-14T12:05:57Z",
+    "pdf_producer": "pdf-lib",
+    "text_layer": false,
+    "extraction_method": "Page images rendered at 100 DPI and transcribed visually (the PDF has no embedded text layer).",
+    "extraction_date": "2026-09-03",
+    "extraction_note": "The uploaded PDF had 744,217 trailing null bytes after the %%EOF marker which made it unreadable by standard PDF parsers; the padding was trimmed before extraction. All text below is transcribed from the brochure. Nothing has been inferred or invented; fields the brochure does not state are marked null or listed under not_stated_in_brochure."
+  },
+
+  "project": {
+    "name": "Karthipuram",
+    "name_variants": ["KARTHIPURAM", "Karthi Puram", "கார்த்தி புரம்"],
+    "tagline": "Step through the door to your dream place",
+    "type": "Integrated township / plotted development (residential + commercial)",
+    "positioning": "Coimbatore's Well Planned Integrated Township",
+    "launch_year": 2025,
+    "total_area_acres": 190,
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "country": "India",
+    "locality": "Neelambur",
+    "city_epithet_used": "Manchester of South India",
+    "founder": "Thiru. P. Karthikeyan",
+    "founder_title": "Founder - Karthipuram",
+    "developer": {
+      "name": "Unnamalai Promoters Pvt Ltd.",
+      "group": "Unnamalai Group",
+      "logo_tagline": "Grow Beyond Limits"
+    },
+    "architect_credited_on_renders": "Sankar & Associates (credit mark appears on the Shopping Mall render, page 9)"
+  },
+
+  "contact": {
+    "office_address": "Unnamalai Promoters Pvt Ltd., No.583/2B1, Poongothai Nagar, Goldwins, Coimbatore-641014, Tamilnadu.",
+    "site_address": "KARTHIPURAM, Avinashi Road, Neelambur, Kathir Engineering College Road, Coimbatore. Kalapatti to Arasur SH Road",
+    "phone_numbers": ["+91 9418 646464", "+91 77780 77790"],
+    "email": "info@karthipuram.com",
+    "website": "www.unnamalaipromoters.com",
+    "source_page": 24
+  },
+
+  "legal_and_approvals": {
+    "dtcp_number": "100/2023",
+    "rera_registration_number": "TN/11/Layout/3352/2025",
+    "rera_verification_url": "https://rera.tn.gov.in",
+    "qr_codes_on_back_cover": [
+      "RERA registration QR (links to rera.tn.gov.in)",
+      "Site Location - Arch : 1",
+      "Site Location - Arch : 3"
+    ],
+    "disclaimer": "All the designs, images, specifications, facilities and other details herein are purely indicative in nature and the intended recipient should note that these are to be treated as purely provisional and informative and as such only. We reserve the right to modify / change / amend / alter any of the aforesaid in the best interest of the development and as per statutory regulations. The contents herein should not be construed as an offer / invitation to offer / contract. This printed material inter alia images, contents therein are for representative purpose only. Any party desirous of / interested in the project needs to enter into an Agreement for Sale",
+    "source_page": 24
+  },
+
+  "headline_numbers": {
+    "housing_plots": 1882,
+    "commercial_plots": 213,
+    "trees": "1200+",
+    "entrance_ways": 15,
+    "parks": 10,
+    "central_park_acres": 9,
+    "types_of_water_connection": 3,
+    "total_acres": 190,
+    "street_lights": 650,
+    "media_tower_height_feet": 52,
+    "road_length_km": "over 4",
+    "road_widths_feet": [80, 60, 40],
+    "underground_services_count": 6,
+    "source_pages": [7, 21]
+  },
+
+  "roads_and_layout": {
+    "road_widths": "80, 60 and 40 feet ('Thar Road')",
+    "road_network_length": "Over 4 kilometres of 80 and 60-feet roads",
+    "entrances": 15,
+    "street_lights": 650,
+    "compound_wall": true,
+    "cctv_surveillance": true,
+    "description": "Crafted with 80 and 60-feet roads stretching over 4 kms, it seamlessly blends a vibrant commercial hub with elegant residential plots.",
+    "source_pages": [3, 15, 21]
+  },
+
+  "infrastructure": {
+    "philosophy": "Smart Underground Infrastructure - world-class underground systems that ensure safety, reliability and convenience.",
+    "underground_services_under_roads": [
+      {"id": "01", "name": "Bhavani Water"},
+      {"id": "02", "name": "Borewell Water"},
+      {"id": "03", "name": "Athikadavu Water"},
+      {"id": "04", "name": "Sewage Line"},
+      {"id": "05", "name": "Fibernet Cable"},
+      {"id": "06", "name": "Electricity Cable"}
+    ],
+    "electricity": "Enjoy uninterrupted power with insulated underground cables running along concrete ducts. No messy poles, no storm damage just safe and reliable electricity for your home and business.",
+    "internet": "Stay connected with high-speed fiber optics laid securely underground. Experience seamless browsing, video calls, streaming, and smart home connectivity without interruptions.",
+    "sewage_and_stp": "Underground Sewage pipe lines laid at the center of the roads and connected to every plot, ensures a clean, odour-free and mosquito-free environment. With an advanced Sewage Treatment Plant, wastewater is purified and reused for greenery uniting hygiene with sustainability.",
+    "storm_water_drainage": "Modern Storm Water drains constructed on either side of the roads have recharge pits at frequent intervals. This system not only prevents water logging but also helps increase the groundwater level, maintaining a clean and eco-friendly environment",
+    "source_pages": [16, 17, 21]
+  },
+
+  "water_supply": {
+    "headline": "Assured Triple Water Supply",
+    "sources": [
+      {
+        "name": "L&T Bhavani Water",
+        "description": "Water sourced from the Bhavani River ensuring trusted and reliable supply."
+      },
+      {
+        "name": "Athikadavu Water",
+        "description": "Sourced from Pillur Dam, the water from pristine Nilgiri forests is clean & cool."
+      },
+      {
+        "name": "Bore Water",
+        "description": "Supplied through a centralized bore system for the entire township, ensuring a reliable and safe water source without the need for individual bores."
+      }
+    ],
+    "summary": "with this triple water supply, your home will never face water scarcity whether for drinking, cooking, gardening or daily household use. Combined with modern infrastructure, underground utilities, and a well-planned community, this project ensures a futuristic lifestyle.",
+    "source_page": 18
+  },
+
+  "parks_and_landscape": {
+    "headline": "A Green Symphony of Modern Living",
+    "description": "Reimagining your mornings & evenings, vibrant and enriched. A 9 acre beautifully landscaped central park at the heart of this township. Karthipuram on whole, hosts 10 parks that are thoughtfully built for everyone's need. For morning walks, family bonding and community gathering.",
+    "total_parks": 10,
+    "central_park_acres": 9,
+    "features": [
+      "Central Lawn",
+      "Play Ground",
+      "Plaza",
+      "Adult Sports Area",
+      "Children's Play Area",
+      "Parents Pavilion",
+      "Cricket Net Practice",
+      "Walking Track",
+      "Reflexology Path",
+      "Outdoor Gym",
+      "Gazebo",
+      "Fountain",
+      "Amphitheatre",
+      "Mega Sculptures"
+    ],
+    "source_pages": [10, 11, 20]
+  },
+
+  "key_features_and_amenities": {
+    "title": "Key Features & Amenities",
+    "items": [
+      "15 Entrance",
+      "3 Types of Water connection",
+      "80, 60, 40 Ft Thar Road",
+      "Underground Eb line",
+      "Underground Fibernet",
+      "Underground Sewage",
+      "STP Plant",
+      "Rain Water Drainage with Recharge Pits",
+      "650 Street Lights",
+      "1200 + Trees",
+      "Total 10 Parks in Karthipuram",
+      "Main Park at 9 Acre",
+      "Children Play Area",
+      "Adult Sports Area",
+      "Walking Path",
+      "School Proposed",
+      "Mall Proposed",
+      "Club Proposed",
+      "Gym",
+      "Amphi Theatre",
+      "CCTV surveillance",
+      "Compound Wall",
+      "Fountain & Lawn",
+      "Mega Sculptures",
+      "52' Ft Media Tower"
+    ],
+    "source_page": 21
+  },
+
+  "planned_facilities": [
+    {
+      "name": "School",
+      "status": "Proposed",
+      "headline": "A Stress Free Premium Education (School)",
+      "description": "Let our children skip hours of bus travel to schools that are miles apart. Let's give them freedom to learn new things and being loved.",
+      "source_page": 8
+    },
+    {
+      "name": "Shopping Mall",
+      "status": "Proposed",
+      "headline": "Shopping Mall",
+      "description": "Fine dining, luxury retail shopping, and entertainment all packed into one seamless experience. When the world seeks more, your town delivers it in style.",
+      "source_page": 9
+    },
+    {
+      "name": "Recreational Club",
+      "status": "Proposed",
+      "headline": "Recreational Club",
+      "description": "Moments of leisure turn into timeless experiences at the Recreational Club. Unwind by the swimming pool, revitalize at the modern fitness studio, or enjoy play with engaging indoor games. Savor fine dining at the signature restaurant, or host refined gatherings in elegant meeting spaces.",
+      "club_amenities": [
+        "Swimming pool",
+        "Modern fitness studio",
+        "Indoor games",
+        "Signature restaurant",
+        "Meeting spaces"
+      ],
+      "source_page": 12
+    },
+    {
+      "name": "Media Tower",
+      "status": "Planned landmark",
+      "headline": "A 52-Feet Icon of Innovation",
+      "height_feet": 52,
+      "description": "Rising tall at the center of Karthipuram's grand boulevard, the 52-feet Media Tower stands as a symbol of innovation and progress. Equipped with advanced LED pixels and dynamic smart displays, it serves as the Township's hub for real-time information, branding, and interactive experiences. From showcasing community updates, advertisements, and cultural events to streaming global content, the Media Tower transforms the streetscape into a lively, connected environment. By day it commands attention as a modern communication landmark, and by night its vibrant illumination redefines the skyline making it a true icon of Karthipuram's futuristic lifestyle.",
+      "source_page": 13
+    },
+    {
+      "name": "Shopping Streets",
+      "status": "Planned",
+      "headline": "Shop At Ease - Shopping Streets",
+      "description": "At KARTHIPURAM, shopping is thought not as chores, but as pure choice and charm; it's about living with ease. Over 4 kilometers of wide 80 and 60-feet roads stretch into vibrant shopping streets, uniting essentials and luxuries in one destination. No more wasted hours in traffic, no more crowded lanes. Here, malls, boutique stores, and lifestyle spaces are just steps away. Shopping becomes an effortless elegant world-class experience truly.",
+      "source_pages": [14, 15]
+    },
+    {
+      "name": "Entrance Arch",
+      "status": "Planned landmark",
+      "description": "Grand entrance arch bearing the name 'Karthi Puram' in English and 'கார்த்தி புரம்' in Tamil, with a clock tower and lion sculptures.",
+      "source_pages": [3, 4]
+    }
+  ],
+
+  "retail_mix_mentioned": [
+    "Parks",
+    "Schools",
+    "Restaurants",
+    "Offices",
+    "Jewellery boutiques",
+    "Textiles showrooms",
+    "Watches",
+    "Footwear",
+    "Malls",
+    "Boutique stores",
+    "Lifestyle spaces"
+  ],
+
+  "environment_and_climate": {
+    "headline": "Breathe Easy, Live Naturally, Wake-up Fresh",
+    "points": [
+      "Located in an altitude that is highest in the surrounding region take a good view of the Nilgiri Mountains in the north and a beautiful sunset amidst the Aanaikatti hills in the west.",
+      "Enjoy a cool breeze in the evening that will put you to a rejuvenating sleep preparing you for the day ahead.",
+      "Surrounded by lush greenery and countless trees, the township thrives in Coimbatore's naturally cool climate. This perfect harmony of nature and weather creates a refreshing, balanced environment, ensuring comfort, health and a vibrant way of living year-round."
+    ],
+    "views": ["Nilgiri Mountains (north)", "Aanaikatti hills (west, sunset)"],
+    "source_page": 19
+  },
+
+  "investment_rationale": {
+    "why_plots_are_better": [
+      "Full Ownership",
+      "Land value keeps rising faster",
+      "Build your dream home your way",
+      "More freedom and independence",
+      "Sell, rent, or expand anytime"
+    ],
+    "why_neelambur": [
+      "Excellent Connectivity & Strategic Location",
+      "Airport Expansion",
+      "Highway & Metro Projects",
+      "Logistics Hub",
+      "Price Appreciation Trends",
+      "Economic Momentum",
+      "Residential & Lifestyle Growth"
+    ],
+    "source_page": 6
+  },
+
+  "nearby_landmarks": {
+    "note": "Brochure heading: 'When Every Thing is Just a Thought and A Few Footsteps Away.'",
+    "schools_within_15_mins": [
+      "Yellow Train School",
+      "GRD-CPF School",
+      "Reeds World School",
+      "Indian Public School",
+      "Chandramari International School",
+      "Sri Chaitanya Techno School"
+    ],
+    "colleges_within_15_mins": [
+      "Kathir College of Arts & Sceince",
+      "Kathir Engineering College",
+      "Adithya Arts College & Engg. College",
+      "PSG iTech",
+      "GRD College of Education"
+    ],
+    "hospitals_within_15_mins": [
+      "Royal Care Hospital",
+      "KMCH"
+    ],
+    "other_nearby": [
+      "AIRPORT",
+      "BROADWAY CINEMAS",
+      "D-MART",
+      "KPR TECH PARK",
+      "Hotel Le-Meridian",
+      "Gokulam Park",
+      "Hotel Merlis",
+      "AUDI Car Showroom",
+      "MG Car Showroom",
+      "Hotel Haribhavanam",
+      "Hotel Anandas",
+      "Hotel Kannappa",
+      "Thalappakatti",
+      "Dominos",
+      "KFC"
+    ],
+    "industry_and_employment": [
+      "Site Nearly Many Industries & Production Units are Available.",
+      "IT Park Arrived in 10km Surrounding."
+    ],
+    "temples_nearby": [
+      "Mariamman Temple",
+      "Kaanaveda Perumal Temple",
+      "Vellanaipatti Kari Varadaraja Perumal Temple"
+    ],
+    "source_page": 22
+  },
+
+  "location_map": {
+    "title": "Right Location",
+    "description": "Location map on page 23 places KARTHIPURAM near Arasur / Serayampalayam, east of Kalapatti, north of Avinashi Road, with Arasur Rd adjacent.",
+    "localities_shown": [
+      "Karamadai", "Periyanaickenpalayam", "Thudiyalur", "Annur", "Kovilpalayam",
+      "Keeranatham", "Saravanampatti", "Vellanaipatti", "Serayampalayam", "Arasur",
+      "Kalapatti", "Vilankurichi", "Gandhimanagar", "Gandhipuram", "Ganapathy",
+      "Ramanathapuram", "Singanallur", "Irugur", "Sulur", "Thennampalayam",
+      "Vagaryampalayam", "Kaniyur", "Karumathampatti", "Karanampettai", "Maruthamalai"
+    ],
+    "roads_shown": ["Avinashi Road", "Kalapatti Road", "Arasur Rd", "Cochin NH"],
+    "education_shown_on_map": [
+      "Sri Ranganathar Institute of Engineering & Technology",
+      "Sri Ramakrishna Engineering College",
+      "Kongunadu Arts College",
+      "SNS College of Technology",
+      "Adithya College of Arts & Science",
+      "Dr.NGP Institutions",
+      "Vidhya Niketha CBSE School",
+      "Amrita Vidyalayam",
+      "Kathir Engg College",
+      "Kathir Arts College",
+      "PSG iTech",
+      "PSG Tech",
+      "KPR College of Arts & Sceince",
+      "GRD College of Institutions",
+      "RVS Engineering College",
+      "Sri Sakthi Institute of Engineering & Techonoly"
+    ],
+    "healthcare_shown_on_map": [
+      "Ganga Hospital",
+      "Govt. Hospital",
+      "PSG Hospital",
+      "ESI Hospital",
+      "KMCH",
+      "Royal Care Hospital"
+    ],
+    "tech_parks_and_commercial_shown_on_map": [
+      "SVB Tech Park",
+      "Global IT Park",
+      "Tidel IT Park",
+      "Defence Industry Park",
+      "Prozone Mall",
+      "Fun Mall",
+      "Lakshmi Mills",
+      "LuLu Hyper Market",
+      "D-Mart",
+      "Roots Group",
+      "Chandra Hyundai",
+      "Kovai Hyundai",
+      "Cars 24",
+      "Shanthi Social Services"
+    ],
+    "transport_shown_on_map": [
+      "Airport",
+      "Coimbatore Railway Station",
+      "Singanallur Railway Station",
+      "Bus Stand (Gandhipuram)"
+    ],
+    "leisure_shown_on_map": [
+      "Isha Yoga",
+      "Ukkadam Lake",
+      "Sulur Boat House",
+      "Maharaja Theme Park",
+      "Cricket Grounds",
+      "DCC Cricket Club",
+      "Residency Hotel",
+      "Hotel Le Meridien",
+      "Haribavanam",
+      "Dindugul Thalappakatti Biriyani"
+    ],
+    "boundary_note": "Tamilnadu & Kerala Forest shown on the western edge of the map.",
+    "source_page": 23
+  },
+
+  "developer_track_record": {
+    "title": "Milestones of Excellence",
+    "brand": "Unnamalai Promoters - Grow Beyond Limits",
+    "projects": [
+      {"year": 2025, "name": "KARTHIPURAM", "location": "Coimbatore", "size": "190 Acres", "highlighted": true},
+      {"year": 2020, "name": "Palaniyappa Gardens", "location": "Dharapuram", "size": "35 Acres"},
+      {"year": 2020, "name": "Unnamalai College of Arts & Science", "location": "Kovilpatti", "size": null},
+      {"year": 2019, "name": "Unnamalai Nagar, Sathvika Nagar, Adhvitha Nagar", "location": "Tirupur", "size": "11 Acres"},
+      {"year": 2011, "name": "Naveen Nagar & Soundaraja Airport Nagar", "location": "Dindugul", "size": "63 Acres"},
+      {"year": 2009, "name": "Unnamalai Institute of Technology", "location": "Kovilpatti", "size": null},
+      {"year": 2002, "name": "Kovilpatti New Town Suba Nagar", "location": "Kovilpatti", "size": "850 Acres"},
+      {"year": 2000, "name": "RMP Nagar", "location": "Sathy", "size": null},
+      {"year": 1999, "name": "Pudhuvalliyampalayam", "location": "Gopi", "size": null},
+      {"year": 1997, "name": "Ram Hanuman Nagar", "location": "Kovilpatti", "size": null},
+      {"year": 1996, "name": "Arun Garden", "location": "Gobi", "size": null},
+      {"year": 1993, "name": "Teachers Colony", "location": "Sulur", "size": null},
+      {"year": 1989, "name": "Arun Garden", "location": "Tirupur", "size": null}
+    ],
+    "source_page": 5
+  },
+
+  "evolution_of_coimbatore": {
+    "title": "Evolution of Coimbatore !",
+    "timeline": [
+      {"year": 1815, "landmark": "Race Course"},
+      {"year": 1892, "landmark": "Town Hall"},
+      {"year": 1921, "landmark": "RS Puram"},
+      {"year": 1974, "landmark": "Gandhipuram"},
+      {"year": 2025, "landmark": "KARTHIPURAM", "subtitle": "Coimbatore's Well Planned Integrated Township"}
+    ],
+    "source_page": 4
+  },
+
+  "marketing_copy": {
+    "founder_message": {
+      "heading": "A LANDMARK OF LUXURY CRAFTED WITH LIFE",
+      "attributed_to": "Thiru. P. Karthikeyan, Founder - Karthipuram",
+      "text": "Having created a legacy of success across diverse industries, the Unnamalai Group now proudly presents its next Landmark Project KARTHIPURAM. Crafted to be more than just a Township, Karthipuram is a grand urban masterpiece designed to astonish not only Tamilnadu but all of India. Envisioned with foresight, this Township has been built with world-class amenities and futuristic infrastructure to serve generations to come. Karthipuram is destined to become a hub of progress, comfort, and lifestyle excellence for the entire Coimbatore region and its surroundings. With this creation, we are setting a new benchmark in real estate and city planning, redefining what it means to live in luxury and convenience. It gives us immense pride and joy to present this prestigious creation Anbudan KARTHIPURAM.",
+      "source_page": 2
+    },
+    "welcome": {
+      "heading": "Welcome to Karthipuram",
+      "text": "At the heart of Coimbatore, celebrated as the Manchester of South India, emerges KARTHIPURAM, a 190-acre visionary Township built on purpose. Crafted with 80 and 60-feet roads stretching over 4 kms, it seamlessly blends a vibrant commercial hub with elegant residential plots.\n\nHere, modern infrastructure meets premium living, bringing together parks, schools, restaurants, offices, jewellery boutiques, textiles showrooms and everything from watches to footwear all in one destination. No more scattered shopping across the city, The Future of world-class living and retail begins here.",
+      "source_page": 3
+    },
+    "taglines": [
+      "Step through the door to your dream place",
+      "Built with vision, touched with soul, a world of living that feels whole.",
+      "A Landmark of Luxury Crafted with Life",
+      "A Legacy of 190 Acres",
+      "Coimbatore's Well Planned Integrated Township",
+      "Anbudan KARTHIPURAM",
+      "Grow Beyond Limits (Unnamalai Promoters)"
+    ]
+  },
+
+  "pages": [
+    {
+      "page": 1,
+      "section": "Front cover",
+      "layout": "Dark navy cover with gold logo and Art-Deco line motifs top-left and bottom-left",
+      "text": [
+        "KARTHI PURAM",
+        "STEP THROUGH THE DOOR",
+        "TO YOUR DREAM PLACE"
+      ],
+      "images": ["Karthipuram monogram logo (gold doorway mark inside a circular text ring)"]
+    },
+    {
+      "page": 2,
+      "section": "Founder's message",
+      "layout": "Pale blue panel; founder portrait left, body copy right; centred pull-quote below",
+      "text": [
+        "A LANDMARK OF LUXURY CRAFTED WITH LIFE",
+        "Having created a legacy of success across diverse industries, the Unnamalai Group now proudly presents its next Landmark Project KARTHIPURAM. Crafted to be more than just a Township, Karthipuram is a grand urban masterpiece designed to astonish not only Tamilnadu but all of India. Envisioned with foresight, this Township has been built with world-class amenities and futuristic infrastructure to serve generations to come. Karthipuram is destined to become a hub of progress, comfort, and lifestyle excellence for the entire Coimbatore region and its surroundings. With this creation, we are setting a new benchmark in real estate and city planning, redefining what it means to live in luxury and convenience. It gives us immense pride and joy to present this prestigious creation Anbudan KARTHIPURAM.",
+        "Thiru. P.Karthikeyan",
+        "Founder - Karthipuram",
+        "BUILT WITH VISION, TOUCHED WITH SOUL, A WORLD OF LIVING THAT FEELS WHOLE."
+      ],
+      "images": ["Portrait photograph of Thiru. P. Karthikeyan"]
+    },
+    {
+      "page": 3,
+      "section": "Welcome / project introduction",
+      "layout": "Full-width entrance-arch render on top; logo left and copy right below",
+      "text": [
+        "Welcome to Karthipuram",
+        "At the heart of Coimbatore, celebrated as the Manchester of South India, emerges KARTHIPURAM, a 190-acre visionary Township built on purpose. Crafted with 80 and 60-feet roads stretching over 4 kms, it seamlessly blends a vibrant commercial hub with elegant residential plots.",
+        "Here, modern infrastructure meets premium living, bringing together parks, schools, restaurants, offices, jewellery boutiques, textiles showrooms and everything from watches to footwear all in one destination. No more scattered shopping across the city, The Future of world-class living and retail begins here.",
+        "KARTHI PURAM / STEP THROUGH THE DOOR / TO YOUR DREAM PLACE"
+      ],
+      "images": ["3D render of the township entrance arch with clock tower, lion sculptures and bilingual signage 'Karthi Puram' / 'கார்த்தி புரம்'"]
+    },
+    {
+      "page": 4,
+      "section": "Evolution of Coimbatore",
+      "layout": "Ascending bar-chart of historic landmarks on a night-skyline background",
+      "text": [
+        "Evolution of Coimbatore !",
+        "1815 Race Course",
+        "1892 Town Hall",
+        "1921 RS Puram",
+        "1974 Gandhipuram",
+        "2025 KARTHIPURAM",
+        "Coimbatore's Well Planned Integrated Township"
+      ],
+      "images": [
+        "Photos of Race Course, Town Hall, RS Puram, Gandhipuram",
+        "Entrance-arch render for 2025",
+        "Night city skyline with fireworks"
+      ]
+    },
+    {
+      "page": 5,
+      "section": "Developer track record",
+      "layout": "Descending row of map-pin shapes, newest (2025) largest and in red",
+      "text": [
+        "Milestones of Excellence",
+        "KARTHIPURAM - COIMBATORE - 190 ACRES (2025)",
+        "Palaniyappa Gardens - Dharapuram - 35 Acres (2020)",
+        "Unnamalai College of Arts & Science - Kovilpatti (2020)",
+        "Unnamalai Nagar, Sathvika Nagar, Adhvitha Nagar Tirupur - 11 Acres (2019)",
+        "Naveen Nagar & Soundaraja Airport Nagar Dindugul - 63 Acres (2011)",
+        "Unnamalai Institute of Technology - Kovilpatti (2009)",
+        "850 Acres - Kovilpatti New Town Suba Nagar (2002)",
+        "RMP Nagar - Sathy (2000)",
+        "Pudhuvalliyampalayam - Gopi (1999)",
+        "Ram Hanuman Nagar - Kovilpatti (1997)",
+        "Arun Garden - Gobi (1996)",
+        "Teachers Colony - Sulur (1993)",
+        "Arun Garden - Tirupur (1989)",
+        "UNNAMALAI PROMOTERS - Grow Beyond Limits"
+      ],
+      "images": ["Unnamalai Promoters logo"]
+    },
+    {
+      "page": 6,
+      "section": "Investment rationale",
+      "layout": "Vertical navy sidebar 'Invest in Karthipuram'; two icon rows",
+      "text": [
+        "Invest in Karthipuram",
+        "Why Plots are Better ?",
+        "Full Ownership",
+        "Land value keeps rising faster",
+        "Build your dream home your way",
+        "More freedom and independence",
+        "Sell, rent, or expand anytime",
+        "Why Neelambur ?",
+        "Excellent Connectivity & Strategic Location",
+        "Airport Expansion",
+        "Highway & Metro Projects",
+        "Logistics Hub",
+        "Price Appreciation Trends",
+        "Economic Momentum",
+        "Residential & Lifestyle Growth"
+      ],
+      "images": ["Line icons for each benefit"]
+    },
+    {
+      "page": 7,
+      "section": "Master plan render and headline numbers",
+      "layout": "Aerial render on top; seven-column stat strip below with a gold '190 Acres' badge at right",
+      "text": [
+        "1882 Housing Plots",
+        "213 Commercial Plots",
+        "1200+ Trees",
+        "15 Entrance Ways",
+        "10 Parks",
+        "9 Acre Central Park",
+        "3 Types of Water Connection",
+        "A Legacy of 190 Acres",
+        "KARTHI PURAM"
+      ],
+      "images": ["Aerial 3D render of the plotted layout with commercial rows, wide roads and entrance canopy"]
+    },
+    {
+      "page": 8,
+      "section": "School (proposed)",
+      "layout": "Building render on top, caption below",
+      "text": [
+        "A Stress Free Premium Education",
+        "(School)",
+        "Let our children skip hours of bus travel to schools that are miles apart. Let's give them freedom to learn new things and being loved."
+      ],
+      "images": ["3D render of a multi-storey school building with clock tower, signage 'KARTHIPURAM'"]
+    },
+    {
+      "page": 9,
+      "section": "Shopping Mall (proposed)",
+      "layout": "Night render on top, caption below",
+      "text": [
+        "Shopping Mall",
+        "Fine dining, luxury retail shopping, and entertainment all packed into one seamless experience. When the world seeks more, your town delivers it in style."
+      ],
+      "images": ["Night-time 3D render of a patterned-facade shopping mall; small 'Sankar & Associates' architect credit bottom right"]
+    },
+    {
+      "page": 10,
+      "section": "Central park render",
+      "layout": "Full-bleed aerial render, no text",
+      "text": [],
+      "images": ["Aerial render of the landscaped central park showing tennis/multi-sport courts, netted cricket practice cage, flower-bed parterre, walking paths, amphitheatre, children's playground, seating and a sculpture roundabout, with plotted streets and houses alongside"]
+    },
+    {
+      "page": 11,
+      "section": "Parks and green spaces",
+      "layout": "Aerial render left; pale blue text panel right with two-column bullet list",
+      "text": [
+        "A Green Symphony of Modern Living",
+        "Reimagining your mornings & evenings, vibrant and enriched. A 9 acre beautifully landscaped central park at the heart of this township. Karthipuram on whole, hosts 10 parks that are thoughtfully built for everyone's need. For morning walks, family bonding and community gathering.",
+        "* Central Lawn",
+        "* Play Ground",
+        "* Plaza",
+        "* Adult Sports Area",
+        "* Children's Play Area",
+        "* Parents Pavilion",
+        "* Cricket Net Practice",
+        "* Walking Track",
+        "* Reflexology Path",
+        "* Outdoor Gym",
+        "* Gazebo",
+        "* Fountain",
+        "* Amphitheatre",
+        "* Mega Sculptures"
+      ],
+      "images": ["Aerial render of roads, plots and park edge with amphitheatre"]
+    },
+    {
+      "page": 12,
+      "section": "Recreational Club (proposed)",
+      "layout": "Building render on top, caption below",
+      "text": [
+        "Recreational Club",
+        "Moments of leisure turn into timeless experiences at the Recreational Club.",
+        "Unwind by the swimming pool, revitalize at the modern fitness studio, or enjoy play with engaging indoor games.",
+        "Savor fine dining at the signature restaurant, or host refined gatherings in elegant meeting spaces."
+      ],
+      "images": ["3D render of a three-storey club building with brick, jali screens and 'KARTHIPURAM' signage"]
+    },
+    {
+      "page": 13,
+      "section": "Media Tower",
+      "layout": "Text left, tower image on a blue-grey panel right",
+      "text": [
+        "A 52-Feet Icon of Innovation",
+        "Rising tall at the center of Karthipuram's grand boulevard, the 52-feet Media Tower stands as a symbol of innovation and progress. Equipped with advanced LED pixels and dynamic smart displays, it serves as the Township's hub for real-time information, branding, and interactive experiences.",
+        "From showcasing community updates, advertisements, and cultural events to streaming global content, the Media Tower transforms the streetscape into a lively, connected environment. By day it commands attention as a modern communication landmark, and by night its vibrant illumination redefines the skyline making it a true icon of Karthipuram's futuristic lifestyle."
+      ],
+      "images": ["Render of the tapered LED media tower with an illuminated screen crown and spire"]
+    },
+    {
+      "page": 14,
+      "section": "Shopping street render",
+      "layout": "Full-bleed render, no text",
+      "text": [],
+      "images": ["Street-level render of a two-sided retail boulevard at dusk with lit shopfronts, mannequins and a wide double-lined road"]
+    },
+    {
+      "page": 15,
+      "section": "Shopping streets",
+      "layout": "Centred heading and single paragraph on white",
+      "text": [
+        "Shop At Ease - Shopping Streets",
+        "At KARTHIPURAM, shopping is thought not as chores, but as pure choice and charm; it's about living with ease. Over 4 kilometers of wide 80 and 60-feet roads stretch into vibrant shopping streets, uniting essentials and luxuries in one destination. No more wasted hours in traffic, no more crowded lanes. Here, malls, boutique stores, and lifestyle spaces are just steps away. Shopping becomes an effortless elegant world-class experience truly."
+      ],
+      "images": []
+    },
+    {
+      "page": 16,
+      "section": "Underground services cutaway",
+      "layout": "Site photo with a cutaway diagram of the road section and a numbered legend card",
+      "text": [
+        "01 Bhavani Water",
+        "02 Borewell Water",
+        "03 Athikadavu Water",
+        "04 Sewage Line",
+        "05 Fibernet Cable",
+        "06 Electricity Cable"
+      ],
+      "images": ["Photograph of a completed road with kerbs, saplings and street lights, cut away to show concrete ducts carrying three water pipes, a large orange sewage pipe, and fibernet and electricity cables"]
+    },
+    {
+      "page": 17,
+      "section": "Smart Underground Infrastructure",
+      "layout": "Pale blue page, heading plus four labelled paragraphs",
+      "text": [
+        "Smart Underground Infrastructure",
+        "Upgrade your lifestyle with world-class underground systems that ensure safety, reliability and convenience.",
+        "ELECTRICITY : Enjoy uninterrupted power with insulated underground cables running along concrete ducts. No messy poles, no storm damage just safe and reliable electricity for your home and business.",
+        "INTERNET : Stay connected with high-speed fiber optics laid securely underground. Experience seamless browsing, video calls, streaming, and smart home connectivity without interruptions.",
+        "SEWAGE SYSTEM & STP PLANT : Underground Sewage pipe lines laid at the center of the roads and connected to every plot, ensures a clean, odour-free and mosquito-free environment. With an advanced Sewage Treatment Plant, wastewater is purified and reused for greenery uniting hygiene with sustainability.",
+        "STORM WATER DRAINGE : Modern Storm Water drains constructed on either side of the roads have recharge pits at frequent intervals. This system not only prevents water logging but also helps increase the groundwater level, maintaining a clean and eco-friendly environment"
+      ],
+      "images": [],
+      "note": "'DRAINGE' is the brochure's own spelling of 'DRAINAGE'."
+    },
+    {
+      "page": 18,
+      "section": "Water supply",
+      "layout": "Heading, water-droplet hero image, three bulleted sources and a closing paragraph",
+      "text": [
+        "Assured Triple Water Supply",
+        "L&T Bhavani Water : Water sourced from the Bhavani River ensuring trusted and reliable supply.",
+        "Athikadavu Water : Sourced from Pillur Dam, the water from pristine Nilgiri forests is clean & cool.",
+        "Bore Water : Supplied through a centralized bore system for the entire township, ensuring a reliable and safe water source without the need for individual bores.",
+        "with this triple water supply, your home will never face water scarcity whether for drinking, cooking, gardening or daily household use. Combined with modern infrastructure, underground utilities, and a well-planned community, this project ensures a futuristic lifestyle."
+      ],
+      "images": ["Water droplet splash photograph", "Three water-drop bullet icons"]
+    },
+    {
+      "page": 19,
+      "section": "Environment and climate",
+      "layout": "Landscape photograph on top, heading and three paragraphs below",
+      "text": [
+        "Breathe Easy, Live Naturally, Wake-up Fresh",
+        "Located in an altitude that is highest in the surrounding region take a good view of the Nilgiri Mountains in the north and a beautiful sunset amidst the Aanaikatti hills in the west.",
+        "Enjoy a cool breeze in the evening that will put you to a rejuvenating sleep preparing you for the day ahead.",
+        "Surrounded by lush greenery and countless trees, the township thrives in Coimbatore's naturally cool climate. This perfect harmony of nature and weather creates a refreshing, balanced environment, ensuring comfort, health and a vibrant way of living year-round."
+      ],
+      "images": ["Sunset over hills with palm trees and mist"]
+    },
+    {
+      "page": 20,
+      "section": "Amenity image grid",
+      "layout": "12 uncaptioned photographs in a 4 x 3 grid on white",
+      "text": [],
+      "images": [
+        "Boulevard with sculpture and street lights",
+        "Amphitheatre with tiered seating",
+        "Wide asphalt road with centre line",
+        "Wall relief with running horse sculptures and planting",
+        "Central lawn with families picnicking and a gazebo",
+        "Children's playground equipment with slides",
+        "Basketball hoop against sky",
+        "Decorative stone relief wall with fountains and flower beds",
+        "Paved walking path through greenery",
+        "Modern abstract sculpture on a plinth",
+        "Netted cricket practice court",
+        "Tiered stone garden fountain"
+      ],
+      "note": "This page has no text; the images illustrate the amenity list on page 11."
+    },
+    {
+      "page": 21,
+      "section": "Key Features & Amenities",
+      "layout": "Pale blue page, 5 x 5 grid of icons with labels",
+      "text": [
+        "Key Features & Amenities",
+        "15 Entrance",
+        "3 Types of Water connection",
+        "80, 60, 40 Ft Thar Road",
+        "Underground Eb line",
+        "Underground Fibernet",
+        "Underground Sewage",
+        "STP Plant",
+        "Rain Water Drainage with Recharge Pits",
+        "650 Street Lights",
+        "1200 + Trees",
+        "Total 10 Parks in Karthipuram",
+        "Main Park at 9 Acre",
+        "Children Play Area",
+        "Adult Sports Area",
+        "Walking Path",
+        "School Proposed",
+        "Mall Proposed",
+        "Club Proposed",
+        "Gym",
+        "Amphi Theatre",
+        "CCTV surveillance",
+        "Compound Wall",
+        "Fountain & Lawn",
+        "Mega Sculptures",
+        "52' Ft Media Tower"
+      ],
+      "images": ["25 line icons, one per feature"]
+    },
+    {
+      "page": 22,
+      "section": "Nearby landmarks",
+      "layout": "Heading top-left, two text columns, large map-pin outline top-right, navy footer band",
+      "text": [
+        "When Every Thing is Just a Thought and A Few Footsteps Away.",
+        "SCHOOLS (within 15 mins)",
+        "* Yellow Train School",
+        "* GRD-CPF School",
+        "* Reeds World School",
+        "* Indian Public School",
+        "* Chandramari International School",
+        "* Sri Chaitanya Techno School",
+        "COLLEGES (within 15 mins)",
+        "* Kathir College of Arts & Sceince",
+        "* Kathir Engineering College",
+        "* Adithya Arts College & Engg. College",
+        "* PSG iTech",
+        "* GRD College of Education",
+        "HOSPITALS (within 15 mins)",
+        "* Royal Care Hospital",
+        "* KMCH",
+        "* AIRPORT, BROADWAY CINEMAS, D-MART, KPR TECH PARK",
+        "* Hotel Le-Meridian, Gokulam Park, Hotel Merlis",
+        "* AUDI & MG Car Showrooms",
+        "* Hotel Haribhavanam, Hotel Anandas, Hotel Kannappa, Thalappakatti, Dominos, KFC Etc.,",
+        "* Site Nearly Many Industries & Production Units are Available.",
+        "* IT Park Arrived in 10km Surrounding.",
+        "* Near the site there are many temples around like Mariamman Temple, Kaanaveda Perumal Temple, Vellanaipatti Kari Varadaraja Perumal Temple"
+      ],
+      "images": ["Outline map-pin graphic"],
+      "note": "'Sceince' is the brochure's own spelling of 'Science'."
+    },
+    {
+      "page": 23,
+      "section": "Location map",
+      "layout": "Illustrated road map of the Coimbatore region with KARTHIPURAM marked in a red flag near Arasur",
+      "text": [
+        "Right Location",
+        "KARTHIPURAM (marked)",
+        "Gandhipuram (marked)",
+        "Avinashi Road, Kalapatti Road, Arasur Rd, Cochin NH",
+        "Karamadai, Periyanaickenpalayam, Thudiyalur, Annur, Kovilpalayam, Keeranatham, Saravanampatti, Vellanaipatti, Serayampalayam, Arasur, Kalapatti, Vilankurichi, Gandhimanagar, Ganapathy, Ramanathapuram, Singanallur, Irugur, Sulur, Thennampalayam, Vagaryampalayam, Kaniyur, Karumathampatti, Karanampettai, Maruthamalai",
+        "Tamilnadu & Kerala Forest",
+        "Isha Yoga, Ukkadam Lake, Sulur Boat House, Maharaja Theme Park",
+        "Ganga Hospital, Govt. Hospital, PSG Hospital, ESI Hospital, KMCH, Royal Care Hospital",
+        "Airport, Coimbatore Railway Station, Singanallur Railway Station, Bus Stand",
+        "SVB Tech Park, Global IT Park, Tidel IT Park, Defence Industry Park",
+        "Prozone Mall, Fun Mall, Lakshmi Mills, LuLu Hyper Market, D-Mart, Roots Group, Chandra Hyundai, Kovai Hyundai, Cars 24, Shanthi Social Services",
+        "Sri Ranganathar Institute of Engineering & Technology, Sri Ramakrishna EngineeringCollege, Kongunadu Arts College, SNS College of Technology, Adithya College of Arts & Science, Dr.NGP Institutions, Vidhya Niketha CBSE School, Amrita Vidyalayam, Kathir Engg College, Kathir Arts College, PSG Tech, PSG iTech, KPR College of Arts & Sceince, GRD College of Institutions, RVS Engineering College, Sri Sakthi Institute of Engineering & Techonoly",
+        "Cricket Grounds, DCC Cricket Club, Residency Hotel, Hotel Le Meridien, Haribavanam, Dindugul Thalappakatti Biriyani, Nava India, Coddisia, Sitra"
+      ],
+      "images": ["Illustrated regional road map"]
+    },
+    {
+      "page": 24,
+      "section": "Back cover / contact",
+      "layout": "Pale blue hexagon-pattern page; logo top-left, contact block centre-left, three QR codes bottom-right, disclaimer footer",
+      "text": [
+        "UNNAMALAI PROMOTERS - Grow Beyond Limits",
+        "Office : Unnamalai Promoters Pvt Ltd., No.583/2B1, Poongothai Nagar, Goldwins, Coimbatore-641014, Tamilnadu.",
+        "Site : KARTHIPURAM Avinashi Road, Neelambur, Kathir Engineering College Road, Coimbatore. Kalapatti to Arasur SH Road",
+        "Cell : +91 9418 646464 / +91 77780 77790",
+        "Email : info@karthipuram.com",
+        "Web : www.unnamalaipromoters.com",
+        "DTCP No : 100/2023",
+        "RERA REG.NO - TN/11/Layout/3352/2025",
+        "https://rera.tn.gov.in",
+        "Site Location - Arch : 1",
+        "Site Location - Arch : 3",
+        "Disclaimer: All the designs, images, specifications, facilities and other details herein are purely indicative in nature and the intended recipient should note that these are to be treated as purely provisional and informative and as such only. We reserve the right to modify / change / amend / alter any of the aforesaid in the best interest of the development and as per statutory regulations. The contents herein should not be construed as an offer / invitation to offer / contract. This printed material inter alia images, contents therein are for representative purpose only. Any party desirous of / interested in the project needs to enter into an Agreement for Sale"
+      ],
+      "images": ["Unnamalai Promoters logo", "RERA QR code", "Site Location - Arch : 1 QR code", "Site Location - Arch : 3 QR code"]
+    }
+  ],
+
+  "not_stated_in_brochure": [
+    "Plot prices, rate per cent / per sqft, registration or other charges",
+    "Plot sizes and dimensions, and which plots are available",
+    "Payment plans, booking amount, loan tie-ups or bank approvals",
+    "Possession or completion dates, construction schedule, phasing",
+    "Maintenance charges or association details",
+    "Distances in km or minutes to specific landmarks (only 'within 15 mins' groupings and 'IT Park Arrived in 10km Surrounding')",
+    "Site office opening hours or visit booking process",
+    "Number of plots already sold or booked",
+    "Names of the school, mall or club operators (all three are marked 'Proposed')",
+    "Survey numbers or plot-level layout numbering"
+  ]
+}
