@@ -72,8 +72,14 @@ _REGION_PREFERRED = {
     "IN": "Asia/Kolkata",      "MY": "Asia/Kuala_Lumpur", "NZ": "Pacific/Auckland",
 }
 
-# phonenumbers still reports the pre-1993 spelling.
-_ALIASES = {"Asia/Calcutta": "Asia/Kolkata", "Asia/Katmandu": "Asia/Kathmandu"}
+# phonenumbers still reports the pre-1993 spelling. The Crown Dependencies are
+# here for a different reason: a UK mobile can come back as Europe/Guernsey,
+# which keeps London's clock to the second but puts "Guernsey" in front of a
+# sales team ringing a caller in Manchester.
+_ALIASES = {"Asia/Calcutta": "Asia/Kolkata", "Asia/Katmandu": "Asia/Kathmandu",
+            "Europe/Guernsey": "Europe/London", "Europe/Jersey": "Europe/London",
+            "Europe/Isle_of_Man": "Europe/London", "Europe/Belfast": "Europe/London",
+            "Europe/Busingen": "Europe/Zurich"}
 
 
 def _digits(number):
@@ -324,6 +330,22 @@ def resolve(text: str, zone=None, now=None) -> dict:
     return out
 
 
+def describe_for_caller(local, ist, zone_name=None) -> str:
+    """The same appointment, written for the person who asked for it.
+
+    An NRI who says "six in the evening" and is texted "7:30 PM IST" has to do
+    the arithmetic themselves to find out whether that is what they asked for -
+    and the one who gets it wrong misses the call. Their own clock leads; IST
+    follows in brackets so they know when the office will be dialling.
+    """
+    if local is None:
+        return human(ist) + " IST" if ist is not None else ""
+    line = human(local)
+    if ist is not None and zone_name and zone_name != IST_NAME:
+        line += " your time (%s IST)" % _clock(ist)
+    return line
+
+
 def _clock(dt) -> str:
     """5:30 PM - no leading zero, which reads badly out loud and in a sheet."""
     return "%s:%s %s" % (dt.strftime("%I").lstrip("0") or "12",
@@ -336,11 +358,20 @@ def human(dt) -> str:
                              _clock(dt))
 
 
+def place(zone_name) -> str:
+    """"Asia/Dubai" -> "Dubai". A tz identifier is not something to put in
+    front of the sales team, or in a message to a caller."""
+    if not zone_name:
+        return ""
+    return zone_name.split("/")[-1].replace("_", " ")
+
+
 def describe(local, ist, zone_name=None) -> str:
-    """One line for the sales team's SMS and the spreadsheet."""
+    """One line for the sales team's SMS and the spreadsheet. IST first,
+    because the person reading it is in Coimbatore."""
     if ist is None:
         return ""
     line = human(ist) + " IST"
     if local is not None and zone_name and zone_name != IST_NAME:
-        line += " (%s %s)" % (_clock(local), zone_name)
+        line += " (%s in %s)" % (_clock(local), place(zone_name))
     return line

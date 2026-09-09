@@ -27,7 +27,7 @@ import websockets
 
 from config import settings
 from urllib.parse import quote
-from vocab import deepgram_keywords
+from vocab import deepgram_keywords, repair
 
 log = logging.getLogger("jarvis.stt")
 
@@ -54,19 +54,33 @@ SHORT_ANSWERS = {
     "thanks",
 }
 
+def _boost_param(model: str) -> str:
+    """nova-2 takes `keywords`, nova-3 renamed it to `keyterm`.
+
+    The call runs on the tuned en-IN nova-2 stream, so this is `keywords` in
+    practice. It stays model-driven rather than hardcoded because DEEPGRAM_MODEL
+    is still an env var: pointing it at nova-3 must not silently drop the whole
+    Karthipuram/name boost, which is what sending `keywords` to nova-3 does -
+    not an error, just ignored, with no symptom but the proper nouns going
+    wrong again.
+    """
+    return "keyterm" if str(model).startswith("nova-3") else "keywords"
+
+
 def _build_url(tuned: bool = True) -> str:
     """The Deepgram query string.
 
-    tuned=False drops Indian English and the keyword boost, and is what we
-    retry with if Deepgram rejects the tuned URL: a call that connects on a
-    worse model beats a call that does not connect at all.
+    tuned=False drops the language and the keyword boost, and is what we retry
+    with if Deepgram rejects the tuned URL: a call that connects on a worse
+    model beats a call that does not connect at all.
     """
+    model, lang = settings.deepgram_model, settings.deepgram_language
     url = (
         "wss://api.deepgram.com/v1/listen"
         "?encoding=mulaw"
         "&sample_rate=8000"
         "&channels=1"
-        f"&model={settings.deepgram_model}"
+        f"&model={model}"
         "&interim_results=true"          # required for utterance_end_ms
         "&punctuate=true"
         "&smart_format=true"
@@ -78,12 +92,13 @@ def _build_url(tuned: bool = True) -> str:
     )
     if not tuned:
         return url
-    if settings.deepgram_language:
-        url += "&language=" + quote(settings.deepgram_language)
+    if lang:
+        url += "&language=" + quote(lang)
     if settings.deepgram_boost:
-        # keywords=Term:intensity, repeated. This is the one fix that lands
-        # BEFORE a transcript exists rather than patching one afterwards.
-        url += "".join("&keywords=" + quote(k) for k in deepgram_keywords())
+        # keywords/keyterm=Term:intensity, repeated. This is the one fix that
+        # lands BEFORE a transcript exists rather than patching one afterwards.
+        param = _boost_param(model)
+        url += "".join("&%s=%s" % (param, quote(k)) for k in deepgram_keywords())
     return url
 
 
@@ -114,11 +129,13 @@ class DeepgramStream:
                      "utterance_end=%sms)", settings.deepgram_endpointing_ms,
                      settings.deepgram_utterance_end_ms)
 
+            model, lang = settings.deepgram_model, settings.deepgram_language
             try:
-                self._ws = await self._connect(DEEPGRAM_WS_URL)
-                log.info("✅ Deepgram connected (%s, %d boosted terms)",
-                         settings.deepgram_language or "default",
-                         len(deepgram_keywords()) if settings.deepgram_boost else 0)
+                self._ws = await self._connect(_build_url())
+                log.info("✅ Deepgram connected (%s, %s, %d boosted %ss)",
+                         model, lang or "default",
+                         len(deepgram_keywords()) if settings.deepgram_boost else 0,
+                         _boost_param(model))
             except Exception as e:
                 # A rejected language or keyword list must never take the call
                 # down. Retry once, plain.
@@ -295,6 +312,19 @@ class DeepgramStream:
         if self.ignoring:
             log.info("🔇 Ignored (bot speaking): %r", text[:80])
             return
+
+        # Boosting raises the odds on a proper noun; it does not make an
+        # Indian place name a solved problem for an English model. This is the
+        # second half of that defence, and it has been written and unused
+        # since it was added: "Cartigram", "Kartivaram" and "Artipuram" all
+        # become "Karthipuram" here, before anything downstream tries to
+        # search for them. The isascii() guard stays: the matcher measures
+        # similarity against a Latin-script lexicon, so anything that comes
+        # back in another script is left exactly as Deepgram heard it.
+        if text.isascii():
+            text, fixes = repair(text)
+            if fixes:
+                log.info("🔤 Repaired: %s", ", ".join("%s->%s" % f for f in fixes))
 
         junk = self._is_junk(text, confidence)
         if junk:

@@ -206,6 +206,130 @@ class NoiseGate:
         self._floor = max(_MIN_FLOOR_RMS, min(_MAX_FLOOR_RMS, self._floor))
 
 
+# --------------------------------------------------------------------------
+# BARGE-IN
+#
+# The bot mutes the microphone for the whole time it is speaking, so a caller
+# who wants to interrupt a fifteen-second answer cannot: they talk, nothing
+# happens, and they wait. Letting them cut in is the single biggest difference
+# between a bot that feels like a phone call and one that feels like a
+# voicemail menu.
+#
+# What makes it hard on this line: TWILIO ECHOES THE BOT'S OWN AUDIO back up
+# the inbound stream. So the inbound frames are never quiet while the bot
+# talks - they carry the bot's own voice at whatever level the line returns
+# it, and that level is different on every call. An absolute threshold is
+# therefore useless: set it above the echo on a quiet line and a caller on a
+# loud one can never interrupt; set it below and the bot interrupts itself on
+# every reply, which is far worse.
+#
+# So the echo is MEASURED, per call, exactly the way NoiseGate measures the
+# noise floor - and a barge-in has to be loud RELATIVE to it. Two voices on a
+# line are louder than one, which is the whole signal being looked for.
+#
+# Three guards on top, all of them there to stop a false positive:
+#   * a grace period, because the echo level is not known in the first frames
+#     of a reply, and because the caller's own last word is still arriving;
+#   * a sustain window, because one loud frame is a cough, a door or a click,
+#     and interrupting the bot for those is worse than not interrupting at all;
+#   * an absolute minimum, because relative-only would trigger on a line so
+#     quiet that the echo never registers.
+# The echo estimate tracks the PEAK, and this is the opposite of NoiseGate,
+# which tracks the floor - deliberately, because the two are answering
+# opposite questions. The gate asks "how quiet does this line get?"; this asks
+# "how loud is the bot's own voice coming back?", and the gaps between the
+# bot's words are not the answer to that. Tracking the minimum here put the
+# estimate down in the gaps, and the bot's next syllable then cleared its own
+# threshold and it interrupted itself.
+_BARGE_ECHO_DECAY = 0.01                # ~1% a frame: half a second to halve
+
+
+class BargeInDetector:
+    """Says when the caller is talking OVER the bot.
+
+    Feed every inbound frame to `feed()` while the bot is speaking, and call
+    `reset()` when it stops. `feed()` returns True exactly once per reply, on
+    the frame where the caller has been over the top of the bot for long
+    enough to be certain it is them.
+    """
+
+    def __init__(self, ratio=2.2, min_rms=1200, sustain_ms=280,
+                 grace_ms=500, enabled=True):
+        self.ratio = max(1.1, float(ratio))
+        self.min_rms = max(0.0, float(min_rms))
+        self.sustain_frames = max(1, int(sustain_ms / 20))
+        self.grace_frames = max(0, int(grace_ms / 20))
+        self.enabled = bool(enabled)
+        self.reset()
+
+    def reset(self):
+        """A new reply: forget the last one's echo level entirely."""
+        self._echo = None
+        self._frames = 0
+        self._over = 0
+        self._fired = False
+
+    @property
+    def echo_level(self) -> float:
+        return self._echo or 0.0
+
+    def threshold(self) -> float:
+        echo = self._echo if self._echo is not None else 0.0
+        return max(self.min_rms, echo * self.ratio)
+
+    def feed(self, mulaw: bytes) -> bool:
+        if not self.enabled or self._fired or not mulaw:
+            return False
+
+        try:
+            rms = audioop.rms(mulaw_to_pcm16(mulaw), 2)
+        except Exception:
+            return False
+
+        self._frames += 1
+
+        if self._echo is None:
+            self._echo = float(rms)
+
+        loud = rms >= self.threshold()
+
+        if loud and self._frames > self.grace_frames:
+            self._over += 1
+            # NOT updated while a barge-in is in progress. Letting these
+            # frames teach the echo estimate is a race the caller loses: the
+            # estimate climbs towards their voice, the threshold climbs with
+            # it, and on a loud line it overtakes them before the sustain
+            # window is up - so the louder the caller shouts, the less likely
+            # they are to be heard. The estimate is frozen from the first loud
+            # frame and only resumes if they turn out to have been a cough.
+            if self._over >= self.sustain_frames:
+                self._fired = True
+                return True
+            return False
+
+        # Not a candidate, so this frame IS the bot's own voice: track it.
+        # Rise immediately to any new peak, decay slowly, so a gap between the
+        # bot's words cannot drag the estimate down to where its next syllable
+        # looks like an interruption.
+        self._over = 0
+        if rms > self._echo:
+            self._echo = float(rms)
+        else:
+            self._echo += (rms - self._echo) * _BARGE_ECHO_DECAY
+        return False
+
+
+def barge_in_from_settings():
+    from config import settings
+    return BargeInDetector(
+        ratio=settings.barge_in_ratio,
+        min_rms=settings.barge_in_min_rms,
+        sustain_ms=settings.barge_in_sustain_ms,
+        grace_ms=settings.barge_in_grace_ms,
+        enabled=settings.barge_in,
+    )
+
+
 def gate_from_settings():
     """Build the gate the way config.py says. Kept here so callers do not have
     to know the settings names."""

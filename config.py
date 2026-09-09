@@ -45,6 +45,7 @@ class Settings:
     # editable without touching vocab.py:
     #   DEEPGRAM_EXTRA_KEYWORDS=Karthi,Bharath,Sathyamangalam
     deepgram_extra_keywords: str = os.getenv("DEEPGRAM_EXTRA_KEYWORDS", "")
+
     # endpointing = "this PHRASE ended". utterance_end_ms = "the TURN ended".
     # Treating the first as the second is what made the bot answer callers
     # mid-sentence, so the turn is only closed by the second (or by the
@@ -103,6 +104,26 @@ class Settings:
     # this only covers the drain - and the noise gate now attenuates whatever
     # tail does leak through.
     echo_tail_ms: int = int(os.getenv("ECHO_TAIL_MS", "550"))
+    # --- Barge-in (see audio_utils.BargeInDetector) ---
+    # Let the caller interrupt a reply instead of waiting it out. Twilio
+    # echoes the bot's own audio back, so this is measured RELATIVE to that
+    # echo, per call - see the long comment in audio_utils.
+    barge_in: bool = os.getenv("BARGE_IN", "true").lower() == "true"
+    # How much louder than the measured echo the line has to get. Lower =
+    # easier to interrupt, and more likely the bot interrupts itself.
+    barge_in_ratio: float = float(os.getenv("BARGE_IN_RATIO", "2.2"))
+    # ...but never below this absolute RMS. Telephone speech runs 1500-8000.
+    barge_in_min_rms: int = int(os.getenv("BARGE_IN_MIN_RMS", "1200"))
+    # How long they have to keep talking. One loud frame is a cough or a door.
+    barge_in_sustain_ms: int = int(os.getenv("BARGE_IN_SUSTAIN_MS", "280"))
+    # Ignored at the start of a reply: the echo level is not known yet, and
+    # the caller's own last word is still arriving up the line.
+    barge_in_grace_ms: int = int(os.getenv("BARGE_IN_GRACE_MS", "500"))
+    # The mic reopens almost at once after an interruption - the queued audio
+    # has been cleared at Twilio, so there is very little left to drain, and
+    # every millisecond here is a millisecond of the caller's interruption
+    # that nobody hears.
+    barge_in_tail_ms: int = int(os.getenv("BARGE_IN_TAIL_MS", "120"))
     # tts.py paces frames in real time, so when the send loop ends only the
     # ~400ms burst-ahead is still queued at Twilio. Waiting on Twilio's mark
     # should therefore be a formality - if it never arrives, reopen the mic
@@ -139,10 +160,6 @@ class Settings:
     # block, which the caller never hears). Set false to fall back to the
     # older buffer-the-lot path.
     llm_stream_sentences: bool = os.getenv("LLM_STREAM_SENTENCES", "true").lower() == "true"
-
-    elevenlabs_api_key: str = os.getenv("ELEVENLABS_API_KEY", "")
-    eleven_voice_id: str = os.getenv("ELEVEN_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
-    eleven_model_id: str = os.getenv("ELEVEN_MODEL_ID", "eleven_turbo_v2_5")
 
     # --- Features ---
     agent_dial_number: str = os.getenv("AGENT_DIAL_NUMBER", "")        # sales agent +91...
@@ -182,6 +199,10 @@ class Settings:
     # --- Behavior tuning ---
     end_turn_silence_ms: int = int(os.getenv("END_TURN_SILENCE_MS", "300"))
     max_reply_sentences: int = int(os.getenv("MAX_REPLY_SENTENCES", "4"))
+    # leads.db. Named for the lead store it began as; what actually opens it is
+    # tools/callbacks.py, which writes one `callbacks` row per booked callback so
+    # nothing is lost if the SMS or WhatsApp alert fails. It holds real callers'
+    # numbers and is gitignored.
     lead_store_path: str = os.getenv("LEAD_STORE_PATH",
                                      os.path.join(os.path.dirname(__file__), "leads.db"))
     # One row per call, in a sheet the sales team can just open. Lives under

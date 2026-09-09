@@ -4,10 +4,10 @@ import re
 import time
 from datetime import datetime
 
-from audio_utils import gate_from_settings
+from audio_utils import gate_from_settings, barge_in_from_settings
 from config import settings
 from stt import DeepgramStream
-from tts import ElevenLabsStreamer
+from tts import KokoroStreamer
 from llm import GroqBrain, EXIT_LINE
 from rag.retriever import retrieve
 from handoff_intent import (wants_human, wants_schedule, extract_time,
@@ -86,6 +86,12 @@ FRAGMENT_MAX_WORDS = 2
 # that the silence never feels like a dropped line.
 FRAGMENT_HOLD_S = 3.0
 
+# How long a turn may sit in the queue behind a reply before it stops being
+# worth answering. Longer than the longest reply (15.2s was the record on the
+# 2026-09-06 call), short enough that the bot never answers something the
+# caller has moved on from.
+QUEUED_TURN_MAX_AGE = 20.0
+
 
 class MediaStreamBridge:
     def __init__(self, send_json):
@@ -95,19 +101,27 @@ class MediaStreamBridge:
         self.caller_number = "unknown"
 
         self.brain = GroqBrain()
-        self.tts = ElevenLabsStreamer()
+        self.tts = KokoroStreamer()
         self.stt = DeepgramStream(self._on_utterance)
         # Turns the caller's background down before Deepgram ever hears it.
         # A confidence threshold can only reject a transcript that already
         # exists; this stops the transcript being made in the first place.
         self.gate = gate_from_settings()
+        # Listens for the caller talking OVER the bot. Only fed while the bot
+        # is speaking, and reset for every reply.
+        self.barge = barge_in_from_settings()
+        # Set when the caller has interrupted, and read by _is_cancelled so
+        # the TTS loop stops mid-sentence instead of finishing the paragraph.
+        self.interrupted = False
 
         self.history = []
         self.speaking = False
 
         # One turn at a time. A second utterance must not start a second LLM
-        # call and a second TTS stream on top of the first.
+        # call and a second TTS stream on top of the first - but it is not
+        # thrown away either; see _drain_queued_turn.
         self._reply_lock = asyncio.Lock()
+        self._queued_turn = None
 
         # Twilio echoes a mark back once the caller has actually HEARD the
         # audio we queued. That, not the end of our send loop, is when the bot
@@ -128,6 +142,9 @@ class MediaStreamBridge:
         # Callback ("connect me to a human") state.
         self.callback_requested = False
         self.callback_time = None
+        # The SAME appointment written for the caller: their own clock first.
+        # callback_time is IST-first, because the sales team reads that one.
+        self.callback_time_for_caller = None
         self.awaiting_callback_time = False
         # Waiting on "may I have your name?", asked once before the day/time.
         self.awaiting_name = False
@@ -211,10 +228,16 @@ class MediaStreamBridge:
         if self.ws_closed or not self.stt_ready:
             return
 
-        # While the bot is talking this frame is our own echo, and send_audio
-        # would discard it anyway. Returning here keeps that audio out of the
-        # gate's noise-floor measurement too.
+        # While the bot is talking this frame is MOSTLY our own echo, and
+        # send_audio would discard it anyway - it stays out of the gate's
+        # noise-floor measurement for that reason. But "mostly" is the point:
+        # if the caller is talking over the top, this is the only place that
+        # can tell, because nothing else is listening.
         if self.stt.ignoring:
+            if self.speaking and not self.interrupted:
+                import base64
+                if self.barge.feed(base64.b64decode(payload_b64)):
+                    await self._on_barge_in()
             return
 
         import base64
@@ -316,10 +339,41 @@ class MediaStreamBridge:
             return
 
         if self._reply_lock.locked():
-            log.info("⏳ Still answering the previous turn - ignoring: %r", text[:60])
+            # QUEUED, not dropped. A reply runs for several seconds, and a
+            # caller who says something in that window - most often repeating
+            # themselves because the bot has not answered yet - had the retry
+            # thrown away and heard nothing back. One slot deep on purpose:
+            # by the time the bot is free, the OLDEST thing the caller said is
+            # the least worth answering, and answering three queued turns in a
+            # row would talk over them for half a minute.
+            dropped = self._queued_turn
+            self._queued_turn = (text, time.time())
+            log.info("⏳ Queued while answering: %r%s", text[:60],
+                     " (replacing %r)" % dropped[0][:40] if dropped else "")
             return
 
         async with self._reply_lock:
+            await self._handle_utterance(text)
+            await self._drain_queued_turn()
+
+    async def _drain_queued_turn(self):
+        """Answer whatever arrived while the last reply was being spoken.
+
+        Held to one turn and to QUEUED_TURN_MAX_AGE. A question the caller
+        asked twenty seconds and two answers ago is not one they are still
+        waiting for, and answering it then is worse than not answering it.
+        """
+        while self._queued_turn:
+            text, queued_at = self._queued_turn
+            self._queued_turn = None
+
+            if time.time() - queued_at > QUEUED_TURN_MAX_AGE:
+                log.info("⌛ Dropping a stale queued turn (%.1fs old): %r",
+                         time.time() - queued_at, text[:60])
+                return
+            if self.ws_closed or self.should_end:
+                return
+            log.info("↩️  Answering the queued turn: %r", text[:60])
             await self._handle_utterance(text)
 
     # ------------------------------------------------ half-sentences
@@ -558,7 +612,7 @@ class MediaStreamBridge:
         else:
             def _generate():
                 return [s for s in self.brain.reply_stream(self.history, user_text,
-                                                           context)
+                                                          context)
                         if s.strip()]
 
             sentences = await loop.run_in_executor(None, _generate)
@@ -672,6 +726,8 @@ class MediaStreamBridge:
             self.callback_local = found["local"]
             self.callback_ist = found["ist"]
             self.callback_time = scheduling.describe(
+                found["local"], found["ist"], self.caller_zone.get("name"))
+            self.callback_time_for_caller = scheduling.describe_for_caller(
                 found["local"], found["ist"], self.caller_zone.get("name"))
             log.info("📅 Callback: %s", self.callback_time)
         else:
@@ -838,7 +894,11 @@ class MediaStreamBridge:
         channel = await loop.run_in_executor(
             None,
             lambda: deliver_callback_confirmation(
-                self.caller_number, self.lead_name, self.callback_time))
+                self.caller_number, self.lead_name,
+                # Their clock, not the office's. An NRI told "7:30 PM IST" has
+                # to work out for themselves whether that is the six o'clock
+                # they asked for, and the one who gets it wrong misses the call.
+                self.callback_time_for_caller or self.callback_time))
 
         self.notified_via = channel
         if channel and channel != "failed":
@@ -892,6 +952,14 @@ class MediaStreamBridge:
 
         if meta.get("whatsapp_wanted") and not self.brochure_sent:
             await self._deliver_brochure()
+
+        if meta.get("end_conversation") and self.interrupted:
+            # The caller cut this reply off, so they never heard the goodbye
+            # it ends with - and they are talking RIGHT NOW. Hanging up on
+            # them mid-sentence because a completion they interrupted said
+            # the call was over would be the worst possible reading of it.
+            log.info("Ignoring end_conversation from an interrupted reply")
+            return
 
         if meta.get("end_conversation"):
             # One offer on the way out, if this caller has not had one. The
@@ -954,6 +1022,8 @@ class MediaStreamBridge:
             return
 
         self.speaking = True
+        self.interrupted = False
+        self.barge.reset()
         self._mark_seq += 1
         self._expected_mark = f"jarvis-{self._mark_seq}"
         self._playback_done.clear()
@@ -975,7 +1045,7 @@ class MediaStreamBridge:
         finally:
             # Frames are QUEUED at Twilio, not played. Wait for Twilio to say
             # the caller has heard them before reopening the mic.
-            if sent and not self.ws_closed:
+            if sent and not self.ws_closed and not self.interrupted:
                 try:
                     await asyncio.wait_for(
                         self._playback_done.wait(),
@@ -992,17 +1062,47 @@ class MediaStreamBridge:
             # The line has been carrying our own audio, not the caller's
             # background. Measure the noise floor again from scratch.
             self.gate.reset()
-            self.stt.unmute(settings.echo_tail_ms / 1000.0)
+            # An interruption gets the short tail: the queue was cleared, so
+            # there is almost nothing draining, and the caller is ALREADY
+            # talking - every millisecond of tail is a millisecond of what
+            # they said that nobody hears.
+            tail = (settings.barge_in_tail_ms if self.interrupted
+                    else settings.echo_tail_ms)
+            self.stt.unmute(tail / 1000.0)
 
     def on_mark(self, name: str):
         """Twilio confirms the caller has finished HEARING a marked chunk."""
         if name and name == self._expected_mark:
             self._playback_done.set()
 
+    async def _on_barge_in(self):
+        """The caller is talking over the bot. Stop talking.
+
+        Order matters and all three steps are needed. `interrupted` stops the
+        TTS loop at the next frame; clearing Twilio's queue drops the audio
+        already sent but not yet played - without it the bot keeps talking for
+        the length of whatever is buffered, which is the whole reason the
+        first attempt at this "did not work"; and releasing the playback mark
+        stops _speak() waiting for a mark that will never come for audio that
+        has been thrown away.
+        """
+        if self.interrupted:
+            return
+        self.interrupted = True
+        log.info("🙋 Caller interrupted (echo≈%.0f, threshold %.0f) - stopping",
+                 self.barge.echo_level, self.barge.threshold())
+        await self._clear_outbound_audio()
+        self._playback_done.set()
+        # Open the mic NOW. _speak's own unmute is still coming, with the
+        # interrupted tail, but the caller is mid-sentence and the first word
+        # of it is already on its way up the line.
+        self.stt.unmute(settings.barge_in_tail_ms / 1000.0)
+
     async def _is_cancelled(self):
-        """Stop mid-sentence if the caller hung up, instead of streaming the
-        rest of the reply into a dead socket."""
-        return self.ws_closed
+        """Stop mid-sentence if the caller hung up or interrupted, instead of
+        streaming the rest of the reply into a dead socket or over the top of
+        somebody who is trying to speak."""
+        return self.ws_closed or self.interrupted
 
     async def _send_media(self, frame: bytes):
         import base64

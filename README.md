@@ -4,15 +4,18 @@ Drop-in replacement for the FreeSWITCH telephony layer of the Karthipuram
 Jarvis voice assistant. Twilio handles the phone call and streams the audio
 to this service over a WebSocket; this service runs the AI conversation
 (Deepgram STT -> Groq LLM + RAG -> Kokoro TTS) and the sales features
-(lead capture, WhatsApp brochure, call recording, human handoff).
+(call log, callback scheduling, WhatsApp brochure, call recording).
+
+The call is held in **English**. There is one STT stream, one voice and one
+prompt: see "One language, on purpose" below.
 
 ```
 Caller (+91) --> Twilio Voice --WebSocket (mu-law 8kHz)--> this service
-                  |                                        |-- Deepgram STT
+                  |                                        |-- Deepgram STT (en-IN, nova-2)
                   |                                        |-- Groq + ChromaDB RAG
                   |                                        |-- Kokoro TTS (local ONNX)
                   |<-------- mu-law audio back ------------|
-                  |-- recording, leads, WhatsApp, handoff (event-triggered)
+                  |-- recording, call log, WhatsApp, callback (event-triggered)
 ```
 
 ## Features
@@ -20,12 +23,15 @@ Caller (+91) --> Twilio Voice --WebSocket (mu-law 8kHz)--> this service
 - Inbound call answering with a natural greeting (recording notice included)
 - Real-time streaming conversation, first audio in about one second
 - RAG answers grounded strictly in `data/knowledge_base.json`
-- Lead capture into SQLite (name, requirement, intent score, transcript)
+- One row per call in `data/call_log.xlsx` (name, requirement, intent score,
+  talk time, callback time in both zones)
+- Callback scheduling in the caller's own timezone, stored in IST
 - WhatsApp brochure delivery during the call
 - Dual-channel call recording with URL logging
-- Warm human handoff to a sales agent via Twilio REST (replaces live TwiML)
-- Echo suppression: the mic is closed while the bot speaks, so it never
-  answers its own voice (barge-in is **not** implemented - see Known gaps)
+- Echo suppression, and **barge-in**: the caller can cut into a long answer.
+  The detector measures Twilio's echo of the bot's own audio per call and
+  requires an interruption to be loud relative to it (`BARGE_IN=false` restores
+  the old behaviour, where the mic stayed shut for the whole reply)
 
 ## What is not in this repo
 
@@ -39,8 +45,27 @@ will run:
 | `.env` | Live Twilio / Deepgram / Groq credentials | `cp .env.example .env` and fill in your own keys |
 
 `chroma_db/` and `leads.db` are also ignored - the first is rebuilt by
-`python -m rag.ingest`, the second is created on the first call and holds real
-callers' phone numbers.
+`python -m rag.ingest`, the second is created on the first booking and holds real
+callers' numbers.
+
+## One language, on purpose
+
+The call is held in English and nothing in the code knows about a second
+language. That is a deliberate reversal - Tamil, Hindi, French and Spanish were
+implemented and then removed - and the reasons are worth keeping:
+
+- `language=multi` costs the **en-IN** model. Deepgram's multilingual stream has
+  no Indian-English variant, so the Indian names and place names this project
+  turns on came back measurably worse. The tuned en-IN nova-2 stream is the
+  whole reason `vocab.repair()` and the keyword boost work.
+- Tamil has **no Kokoro voice**, so it needed a paid ElevenLabs call per
+  sentence on the hot path - the one part of the pipeline that was otherwise
+  free and local.
+- A caller answered in French who is then rung back by a salesperson who only
+  speaks Tamil is worse served than one kept in English. The sales team is the
+  constraint, not the bot.
+
+The removal is one commit; `git log` has it if a language is ever wanted back.
 
 ## Callback scheduling across timezones
 
@@ -121,14 +146,21 @@ Open defects and the change history live in `CHANGELOG.md`.
 
 ## Known gaps
 
-- **No barge-in.** `stt.mute()` stops forwarding audio to Deepgram for the
-  whole time the bot is speaking, so a caller cannot interrupt a long reply.
-- Answers to the same question can differ between turns (`temperature=0.3` in
-  `llm.py`).
-- `vocab.py` (Deepgram keyword boosting and proper-noun repair) and `router.py`
-  are written but imported by nothing.
+- The recogniser can be **confidently wrong** ("swapping mode" -> "shopping
+  mall" at 0.97), which no confidence filter can catch. Mitigated by the keyword
+  boost and `vocab.repair()`, not solved.
+- The `requirement` written to the sales sheet is still whatever was heard, so
+  an ASR error can reach the sheet (it can no longer book a callback on its own -
+  that needs the caller to accept).
+- The smalltalk guard is not turn-aware: "Hello?" mid-call returns the cold-open
+  greeting instead of "yes, I'm here".
+- An interrupted reply is recorded in history as if it were spoken in full.
 - WhatsApp falls back to SMS unless a real WhatsApp sender is bound to the
   Twilio account (error 63007 with the shared sandbox number).
+- Four checks in `tests/test_bridge.py` fail (59/63): two stale expectations
+  left over from queueing mid-reply turns and from the timezone note's wording,
+  and **two real ones** where a name is not extracted and the caller is asked
+  again. See CHANGELOG.
 
 ## Quick start
 
@@ -164,18 +196,22 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 
 | Feature | File | Notes |
 |---|---|---|
-| TwiML / webhook | `server.py` | `/voice`, `/stream-result`, `/recording-complete` |
-| Call conversation loop | `bridge.py` | turn-taking, echo suppression, reply streaming |
-| Speech-to-text | `stt.py` | Deepgram, native mu-law, endpointing |
+| TwiML / webhook | `server.py` | `POST /voice`, `GET /voice`, `/media` (WebSocket), `/brochure.pdf` |
+| Call conversation loop | `bridge.py` | turn-taking, echo suppression, barge-in, reply streaming, the booking flow |
+| Speech-to-text | `stt.py` | Deepgram en-IN nova-2, native mu-law, endpointing, keyword boost |
+| Proper-noun repair | `vocab.py` | the boost list, plus `repair()` on every transcript ("Cartigram" -> "Karthipuram") |
 | LLM brain | `llm.py` | persona, RAG grounding, EXTRA lead metadata |
 | Text-to-speech | `tts.py` | Kokoro ONNX 24 kHz -> 8 kHz mu-law, 20 ms frames, sentence-pipelined |
+| Echo gate and barge-in | `audio_utils.py` | `NoiseGate`, `BargeInDetector` |
+| Callback intent | `handoff_intent.py` | did they ask for a person, accept an offer, give a name or a time |
 | Ask the KB directly | `tools/ask_kb.py` | `python -m tools.ask_kb --check` - real embedder, real store, the phrasings callers actually used |
 | Knowledge base | `rag/` | ingest + retrieve (ChromaDB + MiniLM). **Editing `data/knowledge_base.json` changes nothing until `python -m rag.ingest` is re-run** - the vectors are a build artefact of that file |
-| Leads | `tools/leads.py` | SQLite `leads.db`, one row per call |
+| Rebuild the KB JSON | `build_kb.py` | assembles `data/knowledge_base.json` from `kb_part1/2` + `kb_escalation` |
 | Sales call log | `tools/call_log.py` | Excel sheet, one row per call |
+| Callback records | `tools/callbacks.py` | one `callbacks` row per booking, in `leads.db` (`LEAD_STORE_PATH`) |
 | Caller timezone | `scheduling.py` | phone number -> zone -> callback time in IST |
 | WhatsApp | `tools/whatsapp.py` | sandbox sender by default |
-| Handoff | `tools/handoff.py` | live-call TwiML update -> `<Dial>` |
+| Live dependency check | `tools/smoke_test.py` | every real vendor, no phone call |
 
 ## Testing the WhatsApp feature
 
@@ -193,13 +229,15 @@ template for business-initiated messages.
 |---|---|---|
 | End-of-turn silence | `DEEPGRAM_ENDPOINTING_MS` | Lower = snappier, but may cut pauses |
 | Reply length | `MAX_REPLY_SENTENCES` | Cap sentences per turn |
-| Handoff intent | `INTENT_HANDOFF_THRESHOLD` | Intent score that triggers dial-out |
+| Handoff intent | `INTENT_HANDOFF_THRESHOLD` | Intent score that offers a callback |
+| Barge-in | `BARGE_IN` | `false` keeps the mic shut for the whole reply |
 
 ## Production notes
 
 - Run behind TLS (Caddy/nginx + Let's Encrypt) on a small VM in ap-south-1
   (Mumbai) for lowest round-trip latency with Indian callers.
-- Protect or remove `GET /leads` before going public.
+- `data/call_log.xlsx` holds callers' names and numbers. It is gitignored;
+  keep it that way, and treat the file as personal data.
 - Set `ANNOUNCE_RECORDING=false` only where the law allows unannounced
   recording; in India, announce it.
 - Pin your vendor keys in a secrets manager; never commit `.env`.

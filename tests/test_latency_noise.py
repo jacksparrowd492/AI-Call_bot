@@ -169,7 +169,7 @@ async def main():
     brain = llm_mod.GroqBrain()
     brain.client = object()                       # only truthiness is used
     stream = FakeStream(RAW)
-    brain._open_stream = lambda messages: stream
+    brain._open_stream = lambda messages, temperature=None: stream
 
     marker = RAW.index("METADATA")
     seen = []
@@ -193,7 +193,7 @@ async def main():
             'METADATA:\n{"end_conversation": true}')
     brain2 = llm_mod.GroqBrain()
     brain2.client = object()
-    brain2._open_stream = lambda messages: FakeStream(LONG)
+    brain2._open_stream = lambda messages, temperature=None: FakeStream(LONG)
     said = list(brain2.reply_stream_live([], "hi", "ctx"))
     check("no more than MAX_REPLY_SENTENCES are spoken",
           len(said) == settings.max_reply_sentences, str(said))
@@ -204,14 +204,14 @@ async def main():
     print("\n=== 9. an empty completion still says something ===")
     brain3 = llm_mod.GroqBrain()
     brain3.client = object()
-    brain3._open_stream = lambda messages: FakeStream("")
+    brain3._open_stream = lambda messages, temperature=None: FakeStream("")
     check("dead air is never the answer",
           list(brain3.reply_stream_live([], "hi", "ctx")) == [llm_mod.UNCLEAR_LINE])
 
     brain4 = llm_mod.GroqBrain()
     brain4.client = object()
 
-    def _boom(messages):
+    def _boom(messages, temperature=None):
         raise RuntimeError("groq is down")
 
     brain4._open_stream = _boom
@@ -289,7 +289,7 @@ async def main():
     b.stt = FakeSTT()
     b.tts = RecordingTTS()
     b.brain.client = object()
-    b.brain._open_stream = lambda messages: FakeStream(RAW)
+    b.brain._open_stream = lambda messages, temperature=None: FakeStream(RAW)
 
     task = asyncio.create_task(b._reply("where is it"))
     for _ in range(200):
@@ -330,6 +330,83 @@ async def main():
     await b2.on_media(base64.b64encode(loud_frame).decode())
     check("nothing is forwarded while the bot is speaking",
           len(b2.stt.audio) == n)
+
+    # ------------------------------------------------------------------
+    print("\n=== barge-in: the caller can interrupt a reply ===")
+    from audio_utils import BargeInDetector
+
+    def played(levels, **kw):
+        """Feed a reply's worth of inbound frames. Returns the frame index the
+        detector fired on, or None. Levels are RMS: the bot's echo, plus the
+        caller on top of it where they interrupt."""
+        d = BargeInDetector(**kw)
+        for i, level in enumerate(levels):
+            if d.feed(tone(level)[:FRAME]):
+                return i
+        return None
+
+    ECHO = 900          # the bot's own audio, coming back off the line
+    # A real reply is not a steady tone: 160ms of speech, 80ms of gap.
+    reply = ([ECHO] * 8 + [80] * 4) * 25
+
+    check("the bot does not interrupt itself on a steady echo",
+          played([ECHO] * 300) is None)
+    check("...nor on a loud line",
+          played([2600] * 300) is None)
+    check("...nor in the gaps between its own words",
+          played(reply) is None, "the echo estimate must track the peak")
+    check("...nor while its own audio is getting louder",
+          played([900 + i * 3 for i in range(240)]) is None)
+
+    fired = played([ECHO] * 100 + [ECHO + 3200] * 100)
+    check("the caller talking over the bot IS heard", fired is not None,
+          "fired at %.2fs" % (fired * 0.02) if fired else "never")
+    check("...within a third of a second of them starting",
+          fired is not None and (fired - 100) * 0.02 <= 0.34,
+          "%.2fs" % ((fired - 100) * 0.02) if fired else "never")
+    check("...on a loud line too, where the echo is 2500",
+          played([2500] * 100 + [7000] * 100) is not None)
+    check("...and over a reply with gaps in it",
+          played(reply[:100] + [4200] * 80) is not None)
+
+    check("a single loud click is not an interruption",
+          played([ECHO] * 100 + [12000] + [ECHO] * 100) is None)
+    check("a 200ms burst is not either - under the sustain window",
+          played([ECHO] * 100 + [ECHO + 3200] * 10 + [ECHO] * 100) is None)
+    check("the caller's own trailing word, inside the grace window, is not",
+          played([ECHO + 3200] * 20 + [ECHO] * 150) is None)
+    check("BARGE_IN=false turns the whole thing off",
+          played([12000] * 300, enabled=False) is None)
+
+    # ...and that the bridge acts on it.
+    outbound = []
+
+    async def recording_send_json(data):
+        outbound.append(data)
+
+    b3 = bridge_mod.MediaStreamBridge(recording_send_json)
+    b3.stt = FakeSTT()
+    b3.stream_sid, b3.stt_ready = "MZ-barge", True
+    b3.speaking, b3.stt.ignoring = True, True
+    b3.interrupted = False
+    b3.barge = BargeInDetector(grace_ms=0, sustain_ms=60)
+    # The echo has to be established first - a detector fed nothing but one
+    # loud level measures that level AS the echo and correctly never fires.
+    echo = base64.b64encode(tone(600)[:FRAME]).decode()
+    loud = base64.b64encode(tone(9000)[:FRAME]).decode()
+    for _ in range(10):
+        await b3.on_media(echo)
+    for _ in range(6):
+        await b3.on_media(loud)
+    check("the bridge marks the reply interrupted", b3.interrupted is True)
+    check("...so the TTS loop is told to stop", await b3._is_cancelled() is True)
+    check("...and Twilio's queued audio is cleared",
+          any(m.get("event") == "clear" for m in outbound),
+          str([m.get("event") for m in outbound][-3:]))
+    check("...and the mic is reopened without waiting for the reply to end",
+          b3.stt.ignoring is False)
+    check("...and the mic is not left waiting on a playback mark",
+          b3._playback_done.is_set())
 
     print("\n" + "=" * 60)
     print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

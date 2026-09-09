@@ -404,9 +404,11 @@ class GroqBrain:
             return
 
         messages = self._build_messages(history, user_text, rag_context)
+        temperature = (self.GROUNDED_TEMPERATURE if rag_context
+                       else self.CHAT_TEMPERATURE)
 
         try:
-            buffer, finish_reason = self._stream_completion(messages)
+            buffer, finish_reason = self._stream_completion(messages, temperature)
         except Exception as e:
             log.error("Groq error: %s", e)
             yield "Sorry, one moment - let me connect you to my team."
@@ -450,9 +452,13 @@ class GroqBrain:
             return
 
         messages = self._build_messages(history, user_text, rag_context)
+        # Grounded turn = the retriever found something, so the answer is IN
+        # the prompt and there is nothing to invent. See GROUNDED_TEMPERATURE.
+        temperature = (self.GROUNDED_TEMPERATURE if rag_context
+                       else self.CHAT_TEMPERATURE)
 
         try:
-            stream = self._open_stream(messages)
+            stream = self._open_stream(messages, temperature)
         except Exception as e:
             log.error("Groq error: %s", e)
             yield "Sorry, one moment - let me connect you to my team."
@@ -546,11 +552,21 @@ class GroqBrain:
     _RATE_LIMITED = ("rate_limit", "rate limit", "429", "too many requests",
                      "tokens per minute", "requests per minute")
 
-    def _build_kwargs(self, messages, model):
+    # A turn WITH knowledge behind it is a reading-comprehension task, not a
+    # writing one, and 0.3 made it a lottery: two identical questions with
+    # identical retrieval (best d=0.777, 2026-09-05) came back with different
+    # subsets of the same entry, so a caller who repeated themselves was told
+    # something different the second time. Zero for those. Small talk keeps a
+    # little warmth - there is nothing to be wrong about in "how are you?".
+    GROUNDED_TEMPERATURE = 0.0
+    CHAT_TEMPERATURE = 0.3
+
+    def _build_kwargs(self, messages, model, temperature=None):
         kwargs = dict(
             model=model,
             messages=messages,
-            temperature=0.3,
+            temperature=(self.CHAT_TEMPERATURE if temperature is None
+                         else temperature),
             max_tokens=settings.llm_max_tokens,
             stream=True,
         )
@@ -647,12 +663,12 @@ class GroqBrain:
         self.model = chosen
         _MODELS["resolved"] = chosen
 
-    def _open_stream(self, messages):
+    def _open_stream(self, messages, temperature=None):
         self._resolve_model()
 
         tried, throttled = [], set()
         for _ in range(3):
-            kwargs = self._build_kwargs(messages, self.model)
+            kwargs = self._build_kwargs(messages, self.model, temperature)
             try:
                 return self.client.chat.completions.create(**kwargs)
             except Exception as e:
@@ -703,10 +719,10 @@ class GroqBrain:
         raise RuntimeError("No Groq model accepted the request; tried %s"
                            % ", ".join(tried))
 
-    def _stream_completion(self, messages):
+    def _stream_completion(self, messages, temperature=None):
         """Return (content, finish_reason). Reasoning tokens are consumed and
         discarded - they must never reach the TTS."""
-        stream = self._open_stream(messages)
+        stream = self._open_stream(messages, temperature)
 
         buffer, reasoning_chars, finish_reason = "", 0, None
         for event in stream:
@@ -769,6 +785,8 @@ class GroqBrain:
         text = re.sub(r"^\s*(SPEAKABLE_RESPONSE|METADATA)\s*:\s*", "", text,
                       flags=re.I)
         return re.sub(r"\s{2,}", " ", text).strip()
+
+    # ------------------------------------------------- English for retrieval
 
     # --------------------------------------------------------- off-topic safe
     def smalltalk_guard(self, user_text: str) -> str | None:

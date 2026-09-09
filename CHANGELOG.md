@@ -6,6 +6,359 @@ diagnosis notes get folded in here rather than kept as separate files.
 
 ---
 
+## 2026-09-09 — back to one language, and the dead code is gone
+
+Two things in one pass: the multilingual layer is **removed**, and every file
+nothing imported is deleted. The pipeline is unchanged — Twilio -> Deepgram ->
+Groq + Chroma -> Kokoro, with the barge-in, the booking order and the call log
+exactly as they were.
+
+### Why the languages went
+
+Tamil, Hindi, French and Spanish worked. They were removed anyway, for reasons
+that are about the deployment rather than the code:
+
+- `language=multi` costs the **en-IN** model. Deepgram's multilingual stream has
+  no Indian-English variant, and the whole en-IN + keyword-boost + `vocab.repair()`
+  stack exists because Indian names and place names were the thing going wrong.
+  Trading that away to gain French is the wrong trade for this project.
+- Tamil has **no Kokoro voice**, so it put a paid ElevenLabs HTTP call per
+  sentence on the hot path — in the one stage that was otherwise free, local and
+  never a latency risk.
+- The sales team is the constraint. A caller answered in French and then rung
+  back by someone who speaks Tamil and English is worse served than a caller
+  kept in English throughout.
+
+Removed: `i18n.py`, `tools/check_languages.py`, and the language surface inside
+`config.py` (`SUPPORTED_LANGUAGES`, `MULTILINGUAL`, `DEEPGRAM_MULTI_MODEL`,
+every `ELEVEN_*`), `stt.py` (`_model_and_language`, `switch_language`,
+`detected_language`, `_language_of` — the stream is the tuned en-IN nova-2 one
+again), `tts.py` (`_synthesize_elevenlabs` and the whole ElevenLabs path, the
+`language` argument, `KokoroStreamer.language`), `llm.py` (the "answer in the
+caller's language" system turn, `to_english`) and `bridge.py`
+(`_switch_language`, `_language_from_speech`, `i18n.localize` on every canned
+line). `.env` lost the same keys, including a live ElevenLabs key that is now
+unused — **revoke it at ElevenLabs**, since removing it from `.env` does not.
+
+`tts.ElevenLabsStreamer` was only ever an alias for `KokoroStreamer`; the alias
+is gone and `bridge.py` imports the real name.
+
+`_boost_param()` stays, though the call now only ever runs on nova-2. It keys off
+`DEEPGRAM_MODEL`, which is still an env var, and sending `keywords` to a nova-3
+model is not an error — it is silently ignored, which would drop the entire
+proper-noun boost with no symptom but the names going wrong again.
+
+### Deleted because nothing imported it
+
+- `tools/leads.py` — `upsert_lead()`, `init()` and `all_leads()` were called by
+  nothing, and the `GET /leads` endpoint the README advertised does not exist in
+  `server.py`. `tools/call_log.py` covers the same ground and *is* wired in.
+
+  **`leads.db` itself stays, and so does `LEAD_STORE_PATH`.** The file is not
+  orphaned with `leads.py` gone: `tools/callbacks.py` opens it through
+  `settings.lead_store_path` and writes a `callbacks` row for every booking, on
+  the path `bridge.py` takes when a caller accepts a callback. Deleting that
+  setting broke the booking flow and the test suite did not catch it — the
+  import is lazy and stubbed — so it is restored, with a comment saying who the
+  real user is. The name is now misleading and was left alone anyway: renaming
+  it earns nothing in a pass that is meant to be behaviour-neutral.
+- `tools/handoff.py` — `handoff_to_agent()` did a live-call TwiML update to
+  `<Dial>`. Superseded on 2026-09-04: the bot offers a callback and confirms it
+  in writing, and never transfers a live call.
+- `test_deepgram.py` — a scratch connectivity check from the first week.
+  `tools/smoke_test.py` does this and the rest of the vendors properly.
+- `data/realestatedata.json` — the pre-`build_kb.py` knowledge base, superseded
+  by `data/knowledge_base.json` (40 entries, 310 phrasings).
+- `data/brochure_extract.json` — referenced by no file in the repo.
+- Nine orphaned HNSW directories under `chroma_db/` — segments left behind by
+  past ingests, belonging to no row in the `segments` table.
+
+All of it is in git history if it is ever wanted back.
+
+### The vector store was NOT rebuilt, and did not need to be
+
+`chroma_db/` holds two collections: `real_estate` (353 documents), which is the
+one `CHROMA_COLLECTION` names and the service opens, and `karthipuram` (426
+documents, cosine space) left over from an older KB shape and opened by nothing.
+
+`real_estate`'s `kb_sha1` stamp is `f3e62398…`, which is the sha1 of the current
+`data/knowledge_base.json` — the store is already current, so a rebuild would
+have produced the same vectors. The nine orphaned segment directories were
+removed; `chroma.sqlite3` was not touched.
+
+Dropping the stale `karthipuram` collection needs Chroma itself, and therefore
+the MiniLM ONNX model, which is what the next ingest will do anyway:
+
+    python -m rag.ingest        # drops and rebuilds real_estate
+    python -m tools.ask_kb --check
+
+### Tests
+
+`tests/test_bridge.py` **stopped crashing**: `FakeSTT` had no
+`detected_language`, so the bridge's auto-detect path raised `AttributeError` on
+the first turn and the whole suite died at check 5. With the language code gone
+it runs: **59 passed, 4 failed**.
+
+The four failures pre-date this pass — the same four fail on the previous commit
+once `FakeSTT` is given the missing attribute — and two of them are real:
+
+- **Stale.** "the second turn is dropped, not interleaved" still expects the
+  pre-H behaviour, where a turn arriving mid-reply was discarded. H queues it, so
+  both turns now run. The test is wrong, not the code.
+- **Stale.** "the sales team's note carries both times" wants
+  `(6:00 PM Asia/Dubai)`; the code writes `(6:00 PM in Dubai)`.
+- **REAL.** "and is confirmed rather than asked again" and "and the booking is
+  confirmed anyway, time intact" both end in *"Sorry, I didn't catch that. Could
+  you say just your name, slowly?"* — a name that should have been extracted was
+  not, so the caller is asked twice. This is on the booking path, which is the
+  highest-intent moment on the call. Not fixed here; this pass was a cleanup and
+  is deliberately behaviour-neutral.
+
+Everything else is green, and unchanged from before the cleanup:
+`test_handoff.py` 80/80, `test_scheduling.py` 43/43, `test_stt.py` 31/31,
+`test_tts.py` 14/14, `test_llm.py` 43/43, `test_latency_noise.py` 45/45.
+`test_rag.py` is 55/57 both before and after, and needs the real vector store.
+
+The `language="en"` parameter was dropped from the `fake_synth` stubs in
+`test_tts.py` and `test_latency_noise.py` to match `_synthesize_sync`.
+
+### Still open
+
+Defect **K** (the call log has no language column) is **void** — there is one
+language. C, D, E, G and J below are unchanged, plus the two real test failures
+above.
+
+---
+
+## 2026-09-06 (night) — the five open defects
+
+A, B, F, H and I off the "Still open" list below, which is rewritten at the
+bottom of this file to what is actually left.
+
+### I. Barge-in — the caller can interrupt now
+
+`stt.mute()` stopped forwarding audio for the whole time the bot spoke, so a
+caller could not cut into a fifteen-second answer: they talked, nothing
+happened, and they waited.
+
+The hard part is not the interrupting, it is that **Twilio echoes the bot's own
+audio back up the inbound stream**. The frames are never quiet while the bot
+talks, so an absolute threshold cannot work: above the echo on a quiet line and
+nobody on a loud one can ever interrupt; below it and the bot interrupts
+itself on every reply, which is far worse.
+
+`audio_utils.BargeInDetector` therefore MEASURES the echo, per call, and a
+barge-in has to be loud relative to it — two voices on a line are louder than
+one, and that is the whole signal. Three guards stop false positives: a 500ms
+grace (the echo level is unknown at the start of a reply, and the caller's own
+last word is still arriving), a 280ms sustain (one loud frame is a cough or a
+door), and an absolute floor for lines so quiet the echo never registers.
+
+Two things had to be got right, and the tests pin both:
+
+- **The echo estimate tracks the PEAK, not the floor** — the opposite of
+  `NoiseGate`, deliberately. Tracking the minimum put the estimate down in the
+  gaps between the bot's own words, and its next syllable then cleared its own
+  threshold: the bot interrupted itself.
+- **The estimate freezes once a barge-in is in progress.** Letting those frames
+  teach it is a race the caller loses — the estimate climbs towards their
+  voice, the threshold climbs with it, and on a loud line it overtakes them
+  before the sustain window is up. The louder they shouted, the less likely
+  they were to be heard. This one was found by test 7 and not by reading.
+
+On detection: `interrupted` stops the TTS loop at the next frame, Twilio's
+queued audio is **cleared** (without this the bot keeps talking for the length
+of whatever is buffered, which is why a naive version looks like it does not
+work), the playback mark is released so `_speak` is not waiting for a mark for
+audio that was thrown away, and the mic reopens on a 120ms tail instead of 550.
+
+`BARGE_IN=false` restores the old behaviour exactly.
+
+### H. A turn arriving mid-reply is queued, not dropped
+
+`_reply_lock` discarded anything said while the previous answer was being
+spoken — most often the caller repeating themselves *because* the bot had not
+answered yet, so the retry was the thing thrown away. One slot deep and
+20 seconds stale-dated: by the time the bot is free the oldest thing said is
+the least worth answering, and replaying a backlog would talk over the caller
+for half a minute.
+
+### A. Same question, two different answers
+
+`temperature=0.3` on a turn whose answer is already in the prompt made it a
+lottery — two identical questions with identical retrieval (best d=0.777)
+returned different subsets of the same entry. A grounded turn is
+reading comprehension, not writing: `GROUNDED_TEMPERATURE = 0.0` when the
+retriever found something, `0.3` when it did not and the turn is small talk.
+
+### B. Dead code
+
+- `vocab.repair()` is finally called — in `stt._flush()`, before the transcript
+  goes anywhere. "Cartigram", "Kartivaram" and "Artipuram" become
+  "Karthipuram" ahead of the routing and the search. English only: the matcher
+  measures similarity against a Latin-script lexicon, so running it over Tamil
+  or Devanagari could only damage the transcript.
+- `router.py`, `tools/eval_router.py` and `tools/test_logic.py` are **deleted**.
+  Everything the router decided, `bridge.py` decides inline now, and
+  `test_logic.py` had been broken since `config.py` dropped
+  `route_strong_threshold`. In git history if it is ever wanted back.
+
+### F. phonemizer: words count mismatch
+
+espeak aligns phonemes to WORDS, and that warning is it saying the two no
+longer line up — which is not cosmetic, it risks **clipped audio**, and it fired
+on 4 of 7 syntheses. Every trigger is a token that is one word to Python and
+more (or fewer) to espeak. `tts._expand_for_espeak()` now handles them:
+
+    D-Mart          -> D Mart          2400 sq.ft  -> 2400 square feet
+    DTCP / RERA     -> D T C P ...     80/60 feet  -> 80 60 feet
+    L&T             -> L and T         24x7        -> twenty four seven
+    Rs. 5,500       -> rupees 5,500    3BHK        -> three b h k
+
+`no.` keeps its full stop as a requirement on purpose — making it optional
+turned every caller's "No, thank you" into "Number, thank you".
+
+### Tests
+
+`tests/test_latency_noise.py` gains 16 barge-in checks: four that the bot never
+interrupts itself (steady echo, loud line, gaps between its own words, its own
+audio getting louder), four that a real interruption IS caught (including on a
+loud line and over a gappy reply, within a third of a second), three that
+clicks, short bursts and the caller's own trailing word are not interruptions,
+and four on the bridge acting on it. The stubs in that file were updated for
+the new `temperature` and `language` parameters.
+
+---
+
+## 2026-09-06 (night) — Tamil, Hindi, French and Spanish
+
+A call can now be held in English, Tamil, Hindi, French or Spanish. One new
+module, `i18n.py`, holds everything that knows there is more than one language;
+every other file keeps its shape and its English constants.
+
+    python -m tools.check_languages
+
+New, and it checks the four things that actually break: every canned line is
+translated, every Kokoro voice id exists in `models/voices.bin`, the Deepgram
+URL asks for the right model and the right boost parameter, and a caller asking
+for a language by name is understood. All pass. Sound quality still needs a
+real call — that is the part no script can check.
+
+### What the vendors allow, which is what the design is
+
+- **English, Hindi, French, Spanish are free and automatic.** Deepgram's
+  `language=multi` picks all four out of one stream with no prompt and no
+  reconnect, and Kokoro already has a voice for each (`hf_alpha`, `ff_siwis`,
+  `ef_dora`). `stt._language_of()` reads the detected language off the
+  per-word `language` fields — the majority of the words wins, so one English
+  word inside a French sentence does not flip the call.
+- **Tamil is neither.** Deepgram supports `ta` on **nova-3 only** and **not in
+  the multi set**, so it cannot be detected — only asked for, and the stream
+  has to be reopened on `language=ta` to get it. And Kokoro has no Tamil voice
+  at all: its 54 voices are English, Spanish, French, Hindi, Italian,
+  Portuguese, Japanese and Chinese, and that is the whole list. Tamil speech
+  therefore goes out through **ElevenLabs** (`eleven_turbo_v2_5` supports it),
+  which is why `ELEVENLABS_API_KEY` is now uncommented in `.env`. With no key
+  Tamil is still understood — it is answered in English, and the caller is told
+  so, rather than the line going silent.
+- A caller enters Tamil by asking: *"can you speak Tamil"*, *"தமிழ்ல பேசுங்க"*,
+  *"தமிழில் சொல்லுங்கள்"*. The trigger is the stem **தமிழ** with no pulli,
+  because Tamil agglutinates and the citation form matches only one of those.
+  Asking for a language also **locks** it — the detector stops second-guessing
+  a caller who has stated a preference.
+
+### The hooks, all small on purpose
+
+- `bridge._speak()` runs `i18n.localize()` over every line on its way to the
+  voice. That one hook is why `bridge.py` and `llm.py` still write their canned
+  lines in English: the table is keyed by the English text. Anything the model
+  wrote is not in the table and passes through, because the model was already
+  told which language to answer in.
+- `llm._build_messages()` adds a system turn naming the language — as a turn,
+  not in `SYSTEM_PROMPT`, because the language can change mid-call and the
+  prompt is a module constant built at import. METADATA stays English so the
+  sales sheet stays readable.
+- **The knowledge base stays in English.** `all-MiniLM-L6-v2` is an English
+  embedder, so a Tamil or French question is translated for the *lookup only*
+  (`llm.to_english()`) and the answer is written back in the caller's language.
+  Translating the KB would mean four copies of every answer and four sets of
+  vectors to keep in step.
+- `tts.KokoroStreamer.language` is an instance attribute, not a module global:
+  two callers can be on the line at once in two languages, and a global would
+  give them each other's voice.
+- `tts._normalise_for_speech()` now takes the language. Its ASCII fold — added
+  to stop a curly apostrophe splitting a word in espeak — was deleting the
+  reply in every other language: *français* lost its cedilla and Tamil was
+  erased down to the punctuation. English only now.
+
+### Two things this turned up
+
+**nova-3 renamed `keywords` to `keyterm`.** Sending the old one is not an
+error, it is silently ignored — so switching multilingual on would have thrown
+away the entire Karthipuram and name boost, and the only symptom would have
+been the proper nouns going wrong again. `stt._boost_param()` picks by model.
+
+**`switch_language()` was cancelling the task it runs on.** The utterance-end
+path runs the whole turn *inside* the receiver task (`_receiver` awaits
+`_flush`, which awaits `on_utterance`), so cancelling `self._tasks` to reopen
+the socket would have killed the reply that asked for the switch. It now skips
+`asyncio.current_task()`; the old receiver ends on its own when its socket
+closes.
+
+### Worth knowing
+
+`language=multi` has **no Indian-English variant** — the tuned `en-IN` stream
+is nova-2 only. Indian names and place names will come back slightly worse than
+they did. `MULTILINGUAL=false` in `.env` reverts to exactly the stream this
+project has been running, in one line.
+
+---
+
+## 2026-09-06 (night) — the ISD clock, checked without an ISD call
+
+Every call so far has come from +91, where the caller's zone and the office's
+zone are the same instant, so `callback_local` and `callback_ist` always
+matched and the conversion was never actually exercised. The bug that costs a
+lead only appears on an international call.
+
+### `python -m tools.check_timezones`
+
+New. Drives the same three steps a live call does — `zone_for()` on the number
+that rang us, `resolve()` on what the caller said, `describe()` for the sheet —
+for Dubai, Qatar, London, New Jersey, San Francisco, Singapore, Sydney,
+Malaysia and Kuwait, and checks each result against an independent conversion
+straight from the tz database. No phone, no Twilio, no minutes.
+
+    python -m tools.check_timezones
+    python -m tools.check_timezones +971501234567 "tomorrow at 6 in the evening"
+
+All ten cases pass: the two sheet columns are always the same instant, the
+booking is always in the **caller's** future (a 9 am asked for at 11 am their
+time is tomorrow, worked out in their morning, not ours), and a bare period
+("tomorrow evening") still invents nothing.
+
+### Two things it turned up
+
+**A UK mobile came back as `Europe/Guernsey`.** Correct to the second — same
+clock as London — but "Guernsey" in front of a sales team ringing Manchester
+is noise. The Crown Dependencies, Belfast and Büsingen are now aliased to
+their parent zone in `_ALIASES`.
+
+**The caller was being texted the office's clock.** An NRI who says "six in
+the evening" and receives *"They will call you Mon 7 Sep, 7:30 PM IST"* has to
+do the arithmetic themselves to check it is the six o'clock they asked for,
+and the one who gets it wrong misses the call.
+
+- New `scheduling.describe_for_caller()` — their clock leads, IST follows:
+  *"Mon 7 Sep, 6:00 PM your time (7:30 PM IST)"*.
+- `bridge` keeps both: `callback_time` (IST first) for the sales sheet and the
+  agent alert, `callback_time_for_caller` for the caller's own confirmation.
+- `describe()` now says *"(6:00 PM in Dubai)"* rather than
+  *"(6:00 PM Asia/Dubai)"* — new `scheduling.place()`. An IST caller is
+  unaffected: their line is still just *"Tue 8 Sep, 5:00 PM IST"*.
+
+---
+
 ## 2026-09-06 (late) — the appointment message, the WhatsApp sender, and the name
 
 Three reports from the test call after the previous entry shipped.
@@ -341,44 +694,34 @@ Fixed in that pass, with regression tests that fail on the pre-fix code:
 
 ## Still open
 
-**A. Same question, two different answers.** Two identical questions with
-identical retrieval (`best d=0.777`) returned different subsets of the same KB
-entry. `temperature=0.3` in `llm.py` plus "choose the single best one" means a
-caller who repeats a question gets different facts. Use `temperature=0` for
-grounded turns.
+**C. The recogniser can be confidently wrong.** "Is there any swapping mode?"
+came back as "shopping mall" at confidence 0.97, and no confidence filter can
+catch a confident error. Mitigated rather than fixed: the keyword boost is
+wired in (`stt.py`), `vocab.repair()` now runs on every transcript, and
+multilingual calls run on nova-3. `language=multi` has no Indian-English
+variant, so this may get slightly worse before it gets better —
+`MULTILINGUAL=false` reverts to the tuned en-IN stream.
 
-**B. `vocab.py` and `router.py` are dead code.** `deepgram_keywords()` and
-`repair()` are written, documented as the highest-leverage change available,
-and imported by nothing; `stt.py`'s Deepgram URL has no `keywords=` and no
-`language=`. `router.py` (351 lines) is orphaned too, and its test
-(`tools/test_logic.py`) no longer runs — it reads `settings.route_strong_threshold`,
-which `config.py` has not had for some time. Either wire the router in or
-delete all three.
+**D. A false lead can still be recorded from an ASR error.** Largely defused:
+`handoff: true` is now an OFFER that waits for the caller to accept, so a
+mishearing can no longer book a callback on its own. What remains is the
+`requirement` written into the sales sheet, which is still whatever was heard.
 
-**C. `nova-2` mishears domain words.** "Is there any swapping mode?" at
-confidence 0.97 is "shopping mall". Confidence filtering cannot catch a
-confident error. Fixes: the keyword boost in B, `language=en-IN`, and
-`nova-3` / `nova-2-phonecall`.
+**E. The smalltalk guard is not turn-aware.** "Hello?" in the middle of a call
+returns the cold-open greeting. It should branch on `self.history` being
+non-empty and answer "yes, I'm here" instead.
 
-**D. A false lead can be recorded from an ASR error.** That mishearing produced
-`handoff: true, intent_score: 7` and a callback request for a question the
-caller never asked. Confirm before escalating on a turn whose RAG best-distance
-is above threshold.
+**G. WhatsApp depends on Twilio configuration this repo cannot make.**
+`TWILIO_WHATSAPP_FROM` is set to the project's own number now, but until that
+number is registered as a WhatsApp sender on the Twilio account (or joined to
+the sandbox), every message still falls back to SMS. The code says so once,
+loudly, and stops retrying — it cannot fix it.
 
-**E. The smalltalk guard is not turn-aware.** "Hello?" mid-call returns the
-cold-open line. It should branch on `self.history` being non-empty.
+**J. An interrupted reply is still recorded in history as if it were spoken.**
+The caller cut the bot off after one sentence of three; the model's next turn
+believes all three were heard. Harmless today because the caller's own next
+utterance dominates the context, but it will read oddly in a long call.
 
-**F. `phonemizer: words count mismatch`** on 4 of 7 syntheses — espeak-ng
-failing phoneme alignment, a real risk of clipped Kokoro output. Normalise text
-before TTS (expand `D-Mart`, hyphens, abbreviations).
-
-**G. WhatsApp is not configured (Twilio 63007).** `TWILIO_WHATSAPP_FROM` is the
-shared sandbox number with no channel bound to this account, so every brochure
-silently downgrades to SMS.
-
-**H. `_reply_lock` drops turns silently.** An utterance arriving while the
-previous one is still being answered is discarded. With a multi-second reply, a
-caller who repeats themselves loses the retry.
-
-**I. No barge-in.** `stt.mute()` stops forwarding audio for the whole time the
-bot speaks, so a caller cannot interrupt a long reply.
+**K. The call log has no language column.** A call held in Tamil is
+indistinguishable from one held in English in `data/call_log.xlsx`. Adding it
+means changing the sheet's headers, which existing sheets do not have.

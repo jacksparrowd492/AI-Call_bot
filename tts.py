@@ -49,29 +49,118 @@ _SPEECH_MAP = {
     u"\u2026": u"...", u"\u00a0": u" ", u"\u200b": u"",
     u"&": u" and ", u"\u20b9": u" rupees ", u"\u00b0": u" degrees ",
     u"%": u" percent ", u"\u00bd": u" half ",
+    u"+": u" plus ", u"@": u" at ", u"\u00d7": u" by ",
 }
 _EMOJI_RE = re.compile(
     u"[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF\u2b00-\u2bff]")
 
 
+# espeak-ng aligns phonemes to WORDS, and "words count mismatch on 100.0% of
+# the lines" is it telling us the two no longer line up. Every trigger is a
+# token that is one word to Python's split() and more (or fewer) to espeak:
+#
+#   D-Mart      a hyphen inside a word - espeak splits, the aligner does not
+#   sq.ft       a full stop that is not a sentence end
+#   DTCP        four consonants with no vowel, read as a non-word
+#   80/60       a slash, read as one token or three depending on context
+#
+# The consequence is not a warning, it is CLIPPED AUDIO: a misaligned line can
+# come back short, and the caller hears half a sentence. Four of seven
+# syntheses hit this on the 2026-09-04 call.
+
+# Said as words, not spelled out.
+_SPOKEN = {
+    "sq.ft": "square feet", "sqft": "square feet", "sq ft": "square feet",
+    "sq.m": "square metres", "kms": "kilometres", "km": "kilometres",
+    "hrs": "hours", "approx": "approximately", "etc": "and so on",
+    "no.": "number", "rs.": "rupees", "rs": "rupees", "inr": "rupees",
+    "vs": "versus",
+    "a/c": "air conditioning", "24x7": "twenty four seven",
+    "2bhk": "two b h k", "3bhk": "three b h k", "4bhk": "three b h k",
+}
+
+# Spelled out, one letter at a time, because that is how a person says them.
+_ACRONYMS = ["DTCP", "RERA", "STP", "CCTV", "EMI", "NRI", "BHK", "EB", "TNEB",
+             "L&T", "UDS", "OC", "CC", "NOC", "GST", "PAN", "KYC"]
+_ACRONYM_RE = re.compile(r"\b(%s)\b" % "|".join(_ACRONYMS))
+
+# A hyphen or slash BETWEEN letters or digits. Not a leading minus, which is
+# never in a spoken reply anyway.
+_JOINER_RE = re.compile(r"(?<=[\w])[-/\u2010-\u2015](?=[\w])")
+# A full stop inside a word ("sq.ft", "no.1") - not one that ends a sentence.
+_INNER_DOT_RE = re.compile(r"(?<=[A-Za-z])\.(?=[A-Za-z0-9])")
+
+
+# Keys that span more than one token, or carry their own punctuation, have to
+# be replaced BEFORE the hyphen and full-stop rules take that punctuation away.
+# Single symbols are not in here - _SPEECH_MAP has already dealt with those,
+# and re.escape()ing "+" into a word-boundary pattern is not a valid regex.
+def _phrase_pattern(phrase):
+    """A key like "sq.ft" also has to match "sq ft" and "sqft".
+
+    A key that ENDS in a full stop keeps it as a requirement, though: "no."
+    means the abbreviation, and making that dot optional would turn every
+    caller's "No, thank you" into "Number, thank you".
+    """
+    trailing = phrase.endswith(".")
+    stem = phrase[:-1] if trailing else phrase
+    body = re.escape(stem).replace(r"\ ", r"[.\s]?").replace(r"\.", r"[.\s]?")
+    return re.compile(r"\b" + body + (r"\." if trailing else "") + r"(?!\w)", re.I)
+
+
+_PHRASES = [(_phrase_pattern(p), v)
+            for p, v in sorted(_SPOKEN.items(), key=lambda kv: -len(kv[0]))
+            if (" " in p or "." in p or "/" in p)]
+
+
+def _expand_for_espeak(text: str) -> str:
+    """Turn everything espeak counts differently into plain words."""
+    out = text
+    for pattern, spoken in _PHRASES:
+        out = pattern.sub(spoken, out)
+
+    out = _ACRONYM_RE.sub(lambda m: " ".join(m.group(1).replace("&", "and")), out)
+    out = _INNER_DOT_RE.sub(" ", out)
+    out = _JOINER_RE.sub(" ", out)
+
+    def _word(m):
+        # The trailing full stop is a sentence, not part of the word - look the
+        # word up without it and give it back afterwards, or "24x7." misses.
+        token = m.group(0)
+        bare = token.rstrip(".")
+        tail = token[len(bare):]
+        return _SPOKEN.get(bare.lower(), bare) + tail
+
+    out = re.sub(r"[A-Za-z0-9]+(?:[/x][A-Za-z0-9]+)*\.?", _word, out)
+    # Brackets and quotes are not spoken and only confuse the aligner.
+    out = re.sub(r"[\[\](){}\"\u201c\u201d]", " ", out)
+    return out
+
+
 def _normalise_for_speech(text: str) -> str:
-    """Plain ASCII the phonemiser can handle, and nothing it would read aloud
-    as a symbol."""
+    """Clean text the phonemiser can handle, and nothing it would read aloud
+    as a symbol.
+
+    The ASCII fold at the end stops a curly apostrophe splitting a word in
+    espeak. Anything still outside ASCII would reach espeak as an unknown
+    glyph, so it goes.
+    """
     out = str(text or "")
     for bad, good in _SPEECH_MAP.items():
         out = out.replace(bad, good)
     out = _EMOJI_RE.sub(" ", out)
-    # Anything still outside ASCII would reach espeak as an unknown glyph.
+    out = _expand_for_espeak(out)
     out = out.encode("ascii", "ignore").decode("ascii")
     return re.sub(r"\s{2,}", " ", out).strip()
 
 
 def _synthesize_sync(text: str) -> bytes:
-    kokoro = _get_kokoro()
-
+    """One sentence to 8 kHz PCM, spoken by the local Kokoro voice."""
     text = _normalise_for_speech(text)
     if not text:
         return b""
+
+    kokoro = _get_kokoro()
 
     # speed comes from TTS_SPEED. 1.05 is imperceptibly faster to listen to and
     # takes 5% less wall-clock time to say - and on a phone call the length of
@@ -82,7 +171,7 @@ def _synthesize_sync(text: str) -> bytes:
         text,
         voice=KOKORO_VOICE,
         speed=speed,
-        lang="en-us"
+        lang="en-us",
     )
 
     print(f"🎧 samples={len(samples)} sr={sr}")
@@ -291,7 +380,3 @@ class KokoroStreamer:
             await send_mark(f"tts-done-{sent}")
 
         return sent
-
-
-# Alias
-ElevenLabsStreamer = KokoroStreamer
