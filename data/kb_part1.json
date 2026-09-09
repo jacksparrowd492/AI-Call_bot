@@ -1,0 +1,534 @@
+[
+  {
+    "id": "project_overview",
+    "category": "Project Overview",
+    "topic": "What Karthipuram is",
+    "status": "confirmed",
+    "questions": [
+      "What is Karthipuram?",
+      "Can you tell me about Karthipuram?",
+      "What kind of project is this?",
+      "Is Karthipuram a residential project?",
+      "Is Karthipuram a township?",
+      "What makes Karthipuram different?",
+      "How large is Karthipuram?",
+      "How many acres is the project?",
+      "Tell me about your project",
+      "What are you selling?",
+      "Give me an overview of the project"
+    ],
+    "keywords": ["karthipuram", "township", "project", "acres", "190", "overview", "integrated"],
+    "answer": "Karthipuram is a 190-acre integrated township in Coimbatore with residential and commercial plots, parks, wide roads and full underground infrastructure. It's built so everything you need is inside the township.",
+    "facts": [
+      "190 acres total",
+      "Integrated township with residential and commercial plots",
+      "Located in Coimbatore, the Manchester of South India",
+      "80 and 60-feet roads stretching over 4 kilometres",
+      "Tagline: Step through the door to your dream place"
+    ],
+    "source_pages": [3, 4, 7]
+  },
+  {
+    "id": "project_summary_numbers",
+    "category": "Project Overview",
+    "topic": "Headline project numbers",
+    "status": "confirmed",
+    "questions": [
+      "What are the key numbers of the project?",
+      "How many plots in total?",
+      "Give me the project statistics",
+      "What is included in 190 acres?",
+      "Summarise the project for me",
+      "What are the highlights?"
+    ],
+    "keywords": ["numbers", "statistics", "highlights", "summary", "total", "how many"],
+    "answer": "In 190 acres we have 1,882 housing plots and 213 commercial plots, 10 parks including a 9-acre central park, over 1,200 trees, 15 entrance ways and three types of water connection.",
+    "facts": [
+      "1,882 housing plots",
+      "213 commercial plots",
+      "1,200+ trees",
+      "15 entrance ways",
+      "10 parks",
+      "9-acre central park",
+      "3 types of water connection",
+      "650 street lights"
+    ],
+    "source_pages": [7, 21]
+  },
+  {
+    "id": "promoter",
+    "category": "Promoter",
+    "topic": "Who is building Karthipuram",
+    "status": "confirmed",
+    "questions": [
+      "Who is the promoter of Karthipuram?",
+      "Who developed Karthipuram?",
+      "Which company is behind this project?",
+      "Who are the builders?",
+      "Tell me about Unnamalai Promoters",
+      "Who is the founder?",
+      "Who owns Karthipuram?",
+      "Is the builder reputed?"
+    ],
+    "keywords": ["promoter", "developer", "builder", "unnamalai", "founder", "karthikeyan", "company"],
+    "answer": "Karthipuram is developed by Unnamalai Promoters Private Limited, part of the Unnamalai Group. The founder is Thiru P. Karthikeyan. They have been developing layouts across Tamil Nadu since 1989.",
+    "facts": [
+      "Unnamalai Promoters Pvt Ltd",
+      "Part of the Unnamalai Group",
+      "Founder: Thiru P. Karthikeyan",
+      "Promoter tagline: Grow Beyond Limits",
+      "Active since 1989"
+    ],
+    "source_pages": [2, 5, 24]
+  },
+  {
+    "id": "promoter_track_record",
+    "category": "Promoter",
+    "topic": "Past projects and experience",
+    "status": "confirmed",
+    "questions": [
+      "What other projects have you done?",
+      "What is your track record?",
+      "How long have you been in business?",
+      "What is your experience?",
+      "Have you completed other layouts?",
+      "What are your previous projects?",
+      "Can I trust this builder?",
+      "How many projects have you delivered?"
+    ],
+    "keywords": ["track record", "experience", "previous", "past projects", "milestones", "delivered", "history"],
+    "answer": "We have been developing since 1989, with projects across Kovilpatti, Tirupur, Dindugul, Dharapuram, Gobi, Sathy and Sulur. Our largest so far was 850 acres at Kovilpatti New Town, and we also built two colleges.",
+    "facts": [
+      "1989 Arun Garden, Tirupur",
+      "1993 Teachers Colony, Sulur",
+      "1996 Arun Garden, Gobi",
+      "1997 Ram Hanuman Nagar, Kovilpatti",
+      "1999 Pudhuvalliyampalayam, Gopi",
+      "2000 RMP Nagar, Sathy",
+      "2002 Kovilpatti New Town Suba Nagar, 850 acres",
+      "2009 Unnamalai Institute of Technology, Kovilpatti",
+      "2011 Naveen Nagar and Soundaraja Airport Nagar, Dindugul, 63 acres",
+      "2019 Unnamalai Nagar, Sathvika Nagar, Adhvitha Nagar, Tirupur, 11 acres",
+      "2020 Unnamalai College of Arts and Science, Kovilpatti",
+      "2020 Palaniyappa Gardens, Dharapuram, 35 acres",
+      "2025 Karthipuram, Coimbatore, 190 acres"
+    ],
+    "source_pages": [5]
+  },
+  {
+    "id": "location",
+    "category": "Location",
+    "topic": "Where the site is",
+    "status": "confirmed",
+    "questions": [
+      "Where is Karthipuram located?",
+      "Where exactly is the site?",
+      "What is the address?",
+      "Is it in Coimbatore?",
+      "Is it near Neelambur?",
+      "Is the project on Avinashi Road?",
+      "How do I reach the site?",
+      "Which road is it on?",
+      "Is it near Kathir Engineering College?",
+      "Where is the site located?"
+    ],
+    "keywords": ["location", "address", "where", "neelambur", "avinashi", "site", "kathir", "arasur", "kalapatti"],
+    "answer": "The site is on Avinashi Road, Neelambur, near Kathir Engineering College Road in Coimbatore, on the Kalapatti to Arasur State Highway Road.",
+    "facts": [
+      "Avinashi Road, Neelambur, Kathir Engineering College Road, Coimbatore",
+      "On the Kalapatti to Arasur SH Road",
+      "Close to Arasur and Serayampalayam",
+      "Near PSG iTech and Kathir Engineering College"
+    ],
+    "source_pages": [23, 24]
+  },
+  {
+    "id": "why_neelambur",
+    "category": "Location",
+    "topic": "Why Neelambur is a good location",
+    "status": "confirmed",
+    "questions": [
+      "Why should I buy in Neelambur?",
+      "Why is Neelambur a good location?",
+      "What are the advantages of this location?",
+      "Is Neelambur well connected?",
+      "How is airport connectivity?",
+      "Is it near the highway?",
+      "Is Neelambur developing?",
+      "Is this a logistics hub?",
+      "What is the growth potential here?",
+      "Is the metro coming here?"
+    ],
+    "keywords": ["neelambur", "connectivity", "airport", "highway", "metro", "logistics", "growth", "location advantage"],
+    "answer": "Neelambur has excellent connectivity and a strategic location, with airport expansion, highway and metro projects nearby, a growing logistics hub, strong economic momentum and steady price appreciation.",
+    "facts": [
+      "Excellent connectivity and strategic location",
+      "Airport expansion",
+      "Highway and metro projects",
+      "Logistics hub",
+      "Price appreciation trends",
+      "Economic momentum",
+      "Residential and lifestyle growth"
+    ],
+    "source_pages": [6]
+  },
+  {
+    "id": "transport_connectivity",
+    "category": "Location",
+    "topic": "Metro, public transport and getting around",
+    "status": "confirmed",
+    "questions": [
+      "Is there a metro station inside the township?",
+      "Is there a metro nearby?",
+      "Is the metro coming to Neelambur?",
+      "Is there a metro line here?",
+      "Is there public transport nearby?",
+      "Is there a bus stop nearby?",
+      "How do I travel to the city from there?",
+      "How do I get to the airport from the site?",
+      "Is it easy to commute from here?",
+      "How is the transport connectivity?"
+    ],
+    "keywords": ["metro", "transport", "bus", "commute", "travel", "station", "connectivity", "airport"],
+    "answer": "There's no metro station inside the township itself. Metro and highway projects are part of why we highlight Neelambur's connectivity, and the airport is close by. For the status of any specific line, our team can confirm.",
+    "facts": [
+      "No metro station inside the township",
+      "Highway and Metro Projects are listed among the Neelambur location advantages",
+      "Airport is among the facilities close to the site",
+      "Site is on the Kalapatti to Arasur SH Road, off Avinashi Road",
+      "Timelines for specific transport projects are not given"
+    ],
+    "source_pages": [6, 22, 23]
+  },
+  {
+    "id": "why_plots",
+    "category": "Investment",
+    "topic": "Why buy a plot instead of a flat",
+    "status": "confirmed",
+    "questions": [
+      "Why should I buy a plot instead of a flat?",
+      "Why are plots better than apartments?",
+      "What are the benefits of owning a plot?",
+      "Can I build my own house?",
+      "Can I design my home the way I want?",
+      "Can I expand my house later?",
+      "Can I rent out the property?",
+      "Can I sell the plot later?",
+      "Is a plot a good investment?"
+    ],
+    "keywords": ["plot", "flat", "apartment", "ownership", "build", "expand", "sell", "rent", "freedom"],
+    "answer": "With a plot you get full ownership of the land, and land value keeps rising faster. You can build your dream home your way, expand anytime, and sell or rent whenever you choose.",
+    "facts": [
+      "Full ownership",
+      "Land value keeps rising faster",
+      "Build your dream home your way",
+      "More freedom and independence",
+      "Sell, rent or expand anytime"
+    ],
+    "source_pages": [6]
+  },
+  {
+    "id": "plot_inventory",
+    "category": "Plots",
+    "topic": "How many plots and what types",
+    "status": "confirmed",
+    "questions": [
+      "How many residential plots are there?",
+      "How many housing plots are available?",
+      "How many commercial plots are there?",
+      "What types of plots do you have?",
+      "Do you have residential plots?",
+      "Do you have commercial plots?",
+      "Are there shop plots?"
+    ],
+    "keywords": ["plots", "housing", "residential", "commercial", "how many", "types"],
+    "answer": "The township has 1,882 housing plots and 213 commercial plots.",
+    "facts": ["1,882 housing plots", "213 commercial plots"],
+    "source_pages": [7]
+  },
+  {
+    "id": "roads",
+    "category": "Infrastructure",
+    "topic": "Roads and entrances",
+    "status": "confirmed",
+    "questions": [
+      "How wide are the roads?",
+      "What is the road width inside the township?",
+      "Do you have 80-feet roads?",
+      "Are there 60-feet roads?",
+      "Are there 40-feet roads?",
+      "How much road network is there?",
+      "How many entrances are there?",
+      "Are the roads tar roads?",
+      "Are the internal roads wide?"
+    ],
+    "keywords": ["road", "roads", "width", "feet", "80", "60", "40", "entrance", "tar", "km"],
+    "answer": "We have 80, 60 and 40-feet tar roads, with the 80 and 60-feet roads stretching over 4 kilometres. There are 15 entrance ways into the township.",
+    "facts": [
+      "80, 60 and 40-feet tar roads",
+      "Over 4 kilometres of 80 and 60-feet roads",
+      "15 entrance ways"
+    ],
+    "source_pages": [3, 7, 15, 21]
+  },
+  {
+    "id": "parks",
+    "category": "Amenities",
+    "topic": "Parks and the central park",
+    "status": "confirmed",
+    "questions": [
+      "How many parks are there?",
+      "Is there a central park?",
+      "How big is the central park?",
+      "Is there a 9-acre park?",
+      "What facilities are in the parks?",
+      "Is there a walking track?",
+      "Is there a children's play area?",
+      "Is there an outdoor gym?",
+      "Is there an amphitheatre?",
+      "Is there a cricket practice net?",
+      "Are there fountains?",
+      "Is there a jogging track?"
+    ],
+    "keywords": ["park", "parks", "central park", "9 acre", "playground", "walking", "amphitheatre", "gym", "cricket", "fountain"],
+    "answer": "There are 10 parks including a beautifully landscaped 9-acre central park at the heart of the township, designed for morning walks, family time and community gatherings.",
+    "facts": [
+      "10 parks in total",
+      "9-acre central park",
+      "Central lawn",
+      "Walking track",
+      "Play ground",
+      "Reflexology path",
+      "Plaza",
+      "Outdoor gym",
+      "Adult sports area",
+      "Gazebo",
+      "Children's play area",
+      "Fountain",
+      "Parents pavilion",
+      "Amphitheatre",
+      "Cricket net practice",
+      "Mega sculptures"
+    ],
+    "source_pages": [10, 11, 20, 21]
+  },
+  {
+    "id": "green_environment",
+    "category": "Amenities",
+    "topic": "Trees, greenery and climate",
+    "status": "confirmed",
+    "questions": [
+      "Is this a green township?",
+      "How many trees are there?",
+      "What is the environment like?",
+      "Is the area naturally cool?",
+      "Can I see the Nilgiri mountains?",
+      "Can I see the Aanaikatti hills?",
+      "How is the climate there?",
+      "Is it surrounded by greenery?",
+      "How is the air quality?"
+    ],
+    "keywords": ["trees", "green", "greenery", "climate", "nilgiri", "aanaikatti", "cool", "breeze", "environment", "altitude"],
+    "answer": "We have over 1,200 trees and 10 parks. The site sits at the highest altitude in the surrounding region, so you get views of the Nilgiri mountains to the north and sunsets over the Aanaikatti hills to the west, with a cool evening breeze.",
+    "facts": [
+      "1,200+ trees",
+      "Highest altitude in the surrounding region",
+      "Nilgiri Mountains view to the north",
+      "Sunset over Aanaikatti hills to the west",
+      "Cool evening breeze",
+      "Coimbatore's naturally cool climate"
+    ],
+    "source_pages": [7, 19]
+  },
+  {
+    "id": "school_inside",
+    "category": "Education",
+    "topic": "School inside the township",
+    "status": "proposed",
+    "questions": [
+      "Is there a school in the township?",
+      "Will there be a school inside?",
+      "Do you have your own school?",
+      "Is a school planned?",
+      "Will my children have a school nearby?",
+      "Is the school ready?"
+    ],
+    "keywords": ["school", "inside", "township", "education", "proposed", "children"],
+    "answer": "A school inside the township is proposed, so children can skip long bus travel. I should be clear that it is planned, not yet built.",
+    "facts": [
+      "School is listed as Proposed in the brochure",
+      "Positioned as stress-free premium education",
+      "Intended to avoid long school commutes"
+    ],
+    "source_pages": [8, 21]
+  },
+  {
+    "id": "nearby_schools",
+    "category": "Education",
+    "topic": "Schools near the site",
+    "status": "confirmed",
+    "questions": [
+      "Which schools are nearby?",
+      "Are there schools close to the project?",
+      "What schools are within 15 minutes?",
+      "How far are schools?",
+      "Is there a good school near the site?"
+    ],
+    "keywords": ["schools", "nearby", "15 minutes", "yellow train", "reeds", "indian public", "chaitanya"],
+    "answer": "Within 15 minutes you have Yellow Train School, GRD-CPF School, Reeds World School, Indian Public School, Chandramari International School and Sri Chaitanya Techno School.",
+    "facts": [
+      "Yellow Train School",
+      "GRD-CPF School",
+      "Reeds World School",
+      "Indian Public School",
+      "Chandramari International School",
+      "Sri Chaitanya Techno School",
+      "All within 15 minutes"
+    ],
+    "source_pages": [22]
+  },
+  {
+    "id": "nearby_colleges",
+    "category": "Education",
+    "topic": "Colleges near the site",
+    "status": "confirmed",
+    "questions": [
+      "Which colleges are nearby?",
+      "Are there engineering colleges close by?",
+      "Is Kathir College nearby?",
+      "Is PSG iTech nearby?",
+      "What colleges are around the project?"
+    ],
+    "keywords": ["college", "colleges", "engineering", "kathir", "psg", "adithya", "grd"],
+    "answer": "Within 15 minutes you have Kathir College of Arts and Science, Kathir Engineering College, Adithya Arts and Engineering College, PSG iTech and GRD College of Education.",
+    "facts": [
+      "Kathir College of Arts & Science",
+      "Kathir Engineering College",
+      "Adithya Arts College & Engineering College",
+      "PSG iTech",
+      "GRD College of Education",
+      "All within 15 minutes"
+    ],
+    "source_pages": [22]
+  },
+  {
+    "id": "shopping_mall",
+    "category": "Amenities",
+    "topic": "Shopping mall",
+    "status": "proposed",
+    "questions": [
+      "Is there a shopping mall?",
+      "Do you have a mall in the township?",
+      "Is a mall planned?",
+      "Where will I shop?",
+      "Is the mall built?"
+    ],
+    "keywords": ["mall", "shopping mall", "retail", "proposed"],
+    "answer": "A shopping mall is proposed inside the township, bringing fine dining, luxury retail and entertainment together. It is planned rather than built today.",
+    "facts": [
+      "Mall is listed as Proposed in the brochure",
+      "Fine dining, luxury retail shopping and entertainment"
+    ],
+    "source_pages": [9, 21]
+  },
+  {
+    "id": "shopping_streets",
+    "category": "Amenities",
+    "topic": "Shopping streets and retail",
+    "status": "confirmed",
+    "questions": [
+      "Are there shopping streets?",
+      "Can I buy daily essentials inside?",
+      "Are there boutiques?",
+      "Are there jewellery shops?",
+      "Are there textile showrooms?",
+      "Will I need to travel outside for shopping?",
+      "How long are the shopping streets?",
+      "What kind of shops will there be?"
+    ],
+    "keywords": ["shopping", "streets", "shops", "boutique", "jewellery", "textiles", "retail", "essentials"],
+    "answer": "Over 4 kilometres of our 80 and 60-feet roads become vibrant shopping streets, with boutiques, jewellery, textiles, watches, footwear and everyday essentials, so you don't have to drive across the city.",
+    "facts": [
+      "Over 4 kilometres of shopping streets on 80 and 60-feet roads",
+      "Jewellery boutiques",
+      "Textile showrooms",
+      "Watches to footwear",
+      "Offices and restaurants",
+      "Boutique stores and lifestyle spaces"
+    ],
+    "source_pages": [3, 9, 15, 16]
+  },
+  {
+    "id": "dining_entertainment",
+    "category": "Amenities",
+    "topic": "Dining and entertainment",
+    "status": "proposed",
+    "questions": [
+      "Are there restaurants in the township?",
+      "Is there fine dining?",
+      "Are there entertainment facilities?",
+      "Can I dine inside the township?",
+      "Is there a cinema?"
+    ],
+    "keywords": ["restaurant", "dining", "entertainment", "food", "cinema"],
+    "answer": "Fine dining, luxury retail and entertainment are planned as part of the township, including a signature restaurant at the recreational club.",
+    "facts": [
+      "Fine dining and entertainment planned in the mall",
+      "Signature restaurant at the recreational club",
+      "Mall and club are both listed as Proposed"
+    ],
+    "source_pages": [9, 12]
+  },
+  {
+    "id": "recreational_club",
+    "category": "Amenities",
+    "topic": "Recreational club",
+    "status": "proposed",
+    "questions": [
+      "Is there a club?",
+      "What is in the recreational club?",
+      "Is there a swimming pool?",
+      "Is there a gym or fitness studio?",
+      "Are there indoor games?",
+      "Is there a restaurant in the club?",
+      "Can I host functions or meetings?",
+      "Is the clubhouse ready?"
+    ],
+    "keywords": ["club", "clubhouse", "swimming pool", "gym", "fitness", "indoor games", "restaurant", "meeting"],
+    "answer": "A recreational club is proposed with a swimming pool, modern fitness studio, indoor games, a signature restaurant and elegant meeting spaces. It's planned, not built yet.",
+    "facts": [
+      "Club is listed as Proposed in the brochure",
+      "Swimming pool",
+      "Modern fitness studio",
+      "Indoor games",
+      "Signature restaurant",
+      "Elegant meeting spaces"
+    ],
+    "source_pages": [12, 21]
+  },
+  {
+    "id": "media_tower",
+    "category": "Amenities",
+    "topic": "52-feet Media Tower",
+    "status": "confirmed",
+    "questions": [
+      "What is the Media Tower?",
+      "Tell me about the 52-feet tower",
+      "Why is there a media tower?",
+      "Does the township have digital displays?",
+      "Will it show community updates?",
+      "Is the media tower lit at night?"
+    ],
+    "keywords": ["media tower", "52 feet", "led", "display", "boulevard", "landmark"],
+    "answer": "A 52-feet Media Tower stands at the centre of the grand boulevard, with LED pixels and smart displays showing community updates, advertisements and cultural events. At night its illumination makes it a landmark.",
+    "facts": [
+      "52 feet tall",
+      "At the centre of Karthipuram's grand boulevard",
+      "Advanced LED pixels and dynamic smart displays",
+      "Real-time information, branding and interactive experiences",
+      "Community updates, advertisements, cultural events, global content",
+      "Illuminated landmark at night"
+    ],
+    "source_pages": [13, 21]
+  }
+]

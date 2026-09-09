@@ -1,0 +1,185 @@
+[
+  {
+    "id": "esc_pricing",
+    "category": "Escalation",
+    "topic": "Price, rates and charges",
+    "questions": [
+      "What is the price per cent?",
+      "What is the price per square foot?",
+      "How much does a plot cost?",
+      "What is the cost of a residential plot?",
+      "What is the price of a commercial plot?",
+      "How much is one ground?",
+      "What is your rate?",
+      "How much money do I need?",
+      "What are the registration charges?",
+      "What are the other charges?",
+      "Is it expensive?",
+      "What is the total cost?",
+      "Can you tell me the price?",
+      "What is the budget needed?"
+    ],
+    "keywords": ["price", "cost", "rate", "per cent", "per sqft", "square feet", "charges", "registration", "budget", "expensive", "lakhs", "crore", "amount", "money"],
+    "capture": "pricing enquiry",
+    "reply": "Our pricing changes with the plot and the current offers, so I don't want to quote you anything that might be out of date. Let me have one of our sales experts call you back with the exact price sheet. May I have your name?"
+  },
+  {
+    "id": "esc_availability",
+    "category": "Escalation",
+    "topic": "Plot sizes, dimensions and availability",
+    "questions": [
+      "What plot sizes are available?",
+      "Do you have 1200 square feet plots?",
+      "Do you have 1500 square feet plots?",
+      "Do you have 2400 square feet plots?",
+      "What is the smallest plot?",
+      "What is the largest plot?",
+      "Which plots are corner plots?",
+      "Which plots face the park?",
+      "Which plots are available right now?",
+      "What are the exact dimensions?",
+      "Which plot numbers are free?",
+      "Can I choose my plot number?",
+      "How many plots are left?",
+      "Is there a north facing plot?"
+    ],
+    "keywords": ["size", "dimension", "sqft", "square feet", "cent", "available", "availability", "corner", "facing", "plot number", "left", "vacant", "inventory"],
+    "capture": "plot size / availability enquiry",
+    "reply": "Plot sizes and what's available today change as bookings come in, so I'd be guessing if I told you now. Our sales team has the live layout and can walk you through the options. Shall I have them call you?"
+  },
+  {
+    "id": "esc_booking",
+    "category": "Escalation",
+    "topic": "Booking, payment and loans",
+    "questions": [
+      "How can I book a plot?",
+      "What is the booking process?",
+      "What documents do I need?",
+      "Can I reserve a plot?",
+      "What is the booking amount?",
+      "What is the advance payment?",
+      "What are the payment options?",
+      "Is there a payment plan?",
+      "Can I buy using a home loan?",
+      "Do you provide loan assistance?",
+      "Which banks give loans for this?",
+      "Can I pay in instalments?",
+      "How long can I hold a plot?"
+    ],
+    "keywords": ["book", "booking", "reserve", "advance", "documents", "payment", "instalment", "loan", "bank", "emi", "finance", "process"],
+    "capture": "booking / payment / loan enquiry",
+    "reply": "The booking steps, documents and payment options are best explained by our sales team, who can also help with loan tie-ups. Let me arrange for them to call you. May I take your name?"
+  },
+  {
+    "id": "esc_offers",
+    "category": "Escalation",
+    "topic": "Discounts and offers",
+    "questions": [
+      "Are there any discounts?",
+      "Is there a launch offer?",
+      "Can I get a better price?",
+      "What is the latest offer?",
+      "Can you reduce the price?",
+      "Is there a negotiation possible?",
+      "Any special deal for me?"
+    ],
+    "keywords": ["discount", "offer", "deal", "negotiate", "reduce", "concession", "scheme", "promotion"],
+    "capture": "discount / offer enquiry",
+    "reply": "Offers change from time to time and only our sales team can confirm what's running right now. I'll get them to call you with the current best price. May I have your name?"
+  },
+  {
+    "id": "esc_possession",
+    "category": "Escalation",
+    "topic": "Possession and timelines",
+    "questions": [
+      "What is the possession date?",
+      "When will the project be completed?",
+      "When can I start construction?",
+      "When will the school be ready?",
+      "When will the mall open?",
+      "When will the club be built?",
+      "What is the completion timeline?",
+      "When will I get the patta?",
+      "How long until handover?"
+    ],
+    "keywords": ["possession", "completion", "timeline", "when", "ready", "handover", "date", "patta", "deadline"],
+    "capture": "possession / timeline enquiry",
+    "reply": "I don't want to give you a date that isn't confirmed. Our sales team has the current schedule for the layout and the proposed amenities. Let me have them call you with the exact timeline.",
+    "answer_hint": "The school, mall and club are listed as proposed in the brochure, with no dates given."
+  },
+  {
+    "id": "esc_site_visit",
+    "category": "Escalation",
+    "topic": "Site visit and documents",
+    "questions": [
+      "Can I schedule a site visit?",
+      "Can I visit the site?",
+      "When can I see the property?",
+      "Can you send me the layout plan?",
+      "Can you send me the brochure?",
+      "Can you email me the details?",
+      "Can I meet someone in person?",
+      "Can you send the floor plan?",
+      "I want to see the plot"
+    ],
+    "keywords": ["visit", "site visit", "see", "meet", "layout", "brochure", "floor plan", "send", "email", "appointment"],
+    "capture": "site visit request",
+    "reply": "Absolutely, a site visit is the best way to see it. Our sales team will fix a time that suits you and can send the layout across as well. May I have your name and a good time to call?"
+  },
+  {
+    "id": "esc_maintenance",
+    "category": "Escalation",
+    "topic": "Maintenance charges and association",
+    "questions": [
+      "What is the maintenance charge?",
+      "Is there a monthly maintenance fee?",
+      "Who maintains the parks?",
+      "Who maintains the roads?",
+      "Who maintains the STP?",
+      "Is there a residents association?",
+      "Who looks after the common areas?",
+      "What are the ongoing costs?"
+    ],
+    "keywords": ["maintenance", "monthly", "fee", "association", "upkeep", "common area", "ongoing cost"],
+    "capture": "maintenance / association enquiry",
+    "reply": "Maintenance charges and how the association is set up aren't in my project details. Our sales team can give you the exact arrangement. Would you like me to have them call you?"
+  },
+  {
+    "id": "esc_legal_detail",
+    "category": "Escalation",
+    "topic": "Detailed legal and title questions",
+    "questions": [
+      "Can I see the parent document?",
+      "What is the title history?",
+      "Is there any litigation on the land?",
+      "Can my lawyer review the documents?",
+      "What is the survey number?",
+      "Is the land converted?",
+      "Are there any encumbrances?",
+      "What are the building setback rules?",
+      "How many floors can I build?"
+    ],
+    "keywords": ["title", "parent document", "litigation", "encumbrance", "survey number", "lawyer", "legal opinion", "setback", "floors", "conversion"],
+    "capture": "legal due diligence request",
+    "reply": "Those are proper legal questions and you should have them answered in writing, not over a call. Our team will share the full document set for your lawyer to review. Shall I arrange that?",
+    "answer_hint": "We can confirm DTCP No 100/2023 and RERA TN/11/Layout/3352/2025, verifiable at rera.tn.gov.in."
+  },
+  {
+    "id": "esc_human",
+    "category": "Escalation",
+    "topic": "Caller asks for a human",
+    "questions": [
+      "Can I talk to a person?",
+      "I want to speak to a human",
+      "Transfer me to someone",
+      "Can I speak to your manager?",
+      "Put me through to sales",
+      "I don't want to talk to a bot",
+      "Connect me to an agent",
+      "Is there a real person there?"
+    ],
+    "keywords": ["human", "person", "agent", "manager", "transfer", "connect", "real person", "someone"],
+    "capture": "asked for a human",
+    "reply": "Of course. Let me connect you with one of our sales experts right away."
+  }
+]

@@ -1,0 +1,483 @@
+[
+  {
+    "id": "underground_infrastructure",
+    "category": "Infrastructure",
+    "topic": "Underground utilities overview",
+    "status": "confirmed",
+    "questions": [
+      "Does the township have underground infrastructure?",
+      "Are the cables underground?",
+      "What is laid under the roads?",
+      "Are there underground utilities?",
+      "Will there be electricity poles inside?",
+      "How is the infrastructure protected from storms?",
+      "Is everything underground?"
+    ],
+    "keywords": ["underground", "utilities", "ducts", "cables", "infrastructure", "poles"],
+    "answer": "Everything runs underground. Under our roads we've laid six services: Bhavani water, borewell water, Athikadavu water, the sewage line, Fibernet cable and electricity cable. So no messy poles and no storm damage.",
+    "facts": [
+      "Six underground services under the roads",
+      "Bhavani Water line",
+      "Borewell Water line",
+      "Athikadavu Water line",
+      "Sewage Line",
+      "Fibernet Cable",
+      "Electricity Cable",
+      "Insulated cables run in concrete ducts"
+    ],
+    "source_pages": [16, 17]
+  },
+  {
+    "id": "electricity",
+    "category": "Infrastructure",
+    "topic": "Electricity supply",
+    "status": "confirmed",
+    "questions": [
+      "How is electricity supplied?",
+      "Is the power supply underground?",
+      "Are the electrical lines insulated?",
+      "Will there be power poles?",
+      "Is the power supply reliable?",
+      "Is the EB line underground?"
+    ],
+    "keywords": ["electricity", "power", "eb", "cable", "underground", "poles", "insulated"],
+    "answer": "Electricity comes through insulated underground cables running in concrete ducts. No messy poles, no storm damage, just safe and reliable power for your home and business.",
+    "facts": [
+      "Insulated underground cables",
+      "Cables run along concrete ducts",
+      "No overhead poles",
+      "Protected from storm damage"
+    ],
+    "source_pages": [17, 21]
+  },
+  {
+    "id": "internet",
+    "category": "Infrastructure",
+    "topic": "Internet and Fibernet",
+    "status": "confirmed",
+    "questions": [
+      "Is internet available?",
+      "Is fiber internet provided?",
+      "Is the Fibernet underground?",
+      "Will I get high-speed internet?",
+      "Is broadband available?",
+      "Can I work from home there?"
+    ],
+    "keywords": ["internet", "fiber", "fibernet", "broadband", "wifi", "speed", "connectivity"],
+    "answer": "High-speed fiber optics are laid securely underground, so you get seamless browsing, video calls, streaming and smart-home connectivity without interruptions.",
+    "facts": [
+      "Underground Fibernet cable",
+      "High-speed fiber optics",
+      "Supports browsing, video calls, streaming, smart home"
+    ],
+    "source_pages": [16, 17, 21]
+  },
+  {
+    "id": "sewage_stp",
+    "category": "Infrastructure",
+    "topic": "Sewage system and STP",
+    "status": "confirmed",
+    "questions": [
+      "Is there a sewage system?",
+      "Is sewage connected to every plot?",
+      "Is there an STP plant?",
+      "How is wastewater treated?",
+      "Is treated water reused?",
+      "Will there be sewage smell?",
+      "Will there be mosquito problems?"
+    ],
+    "keywords": ["sewage", "stp", "wastewater", "drainage", "smell", "mosquito", "treatment"],
+    "answer": "Underground sewage pipelines run at the centre of the roads and connect to every plot. An advanced Sewage Treatment Plant purifies the wastewater and reuses it for the greenery, keeping the township clean, odour-free and mosquito-free.",
+    "facts": [
+      "Underground sewage pipelines at the centre of roads",
+      "Connected to every plot",
+      "Advanced Sewage Treatment Plant",
+      "Treated water reused for greenery",
+      "Clean, odour-free and mosquito-free environment"
+    ],
+    "source_pages": [17, 21]
+  },
+  {
+    "id": "storm_water",
+    "category": "Infrastructure",
+    "topic": "Rainwater and storm drainage",
+    "status": "confirmed",
+    "questions": [
+      "How is rainwater handled?",
+      "Is there storm water drainage?",
+      "Will there be waterlogging?",
+      "Are there recharge pits?",
+      "How is groundwater recharged?",
+      "Does the area flood?"
+    ],
+    "keywords": ["rain", "rainwater", "storm", "drainage", "waterlogging", "flood", "recharge", "groundwater"],
+    "answer": "Modern storm water drains run along both sides of the roads with recharge pits at frequent intervals. That prevents waterlogging and also helps raise the groundwater level.",
+    "facts": [
+      "Storm water drains on either side of the roads",
+      "Recharge pits at frequent intervals",
+      "Prevents water logging",
+      "Increases groundwater level"
+    ],
+    "source_pages": [17, 21]
+  },
+  {
+    "id": "water_supply",
+    "category": "Infrastructure",
+    "topic": "Triple water supply",
+    "status": "confirmed",
+    "questions": [
+      "What is the water source?",
+      "Will there be enough water?",
+      "What are the three water sources?",
+      "Do you get Bhavani water?",
+      "Do you get Athikadavu water?",
+      "Is borewell water available?",
+      "Will there be water scarcity?",
+      "Is drinking water available?",
+      "How is water supplied to the plots?",
+      "Do I need my own borewell?"
+    ],
+    "keywords": ["water", "supply", "bhavani", "athikadavu", "borewell", "bore", "drinking", "scarcity", "triple"],
+    "answer": "We have an assured triple water supply: L and T Bhavani water from the Bhavani river, Athikadavu water from Pillur Dam, and bore water through a centralised system for the whole township. So no individual borewell is needed and no water scarcity.",
+    "facts": [
+      "Three types of water connection",
+      "L&T Bhavani Water from the Bhavani River",
+      "Athikadavu Water from Pillur Dam, from the Nilgiri forests, clean and cool",
+      "Bore Water through a centralised bore system for the entire township",
+      "No need for individual bores",
+      "Covers drinking, cooking, gardening and daily household use"
+    ],
+    "source_pages": [16, 18]
+  },
+  {
+    "id": "street_lights",
+    "category": "Infrastructure",
+    "topic": "Street lighting",
+    "status": "confirmed",
+    "questions": [
+      "Are there street lights?",
+      "How many street lights are there?",
+      "Is the township lit at night?",
+      "Is it safe to walk at night?"
+    ],
+    "keywords": ["street light", "lights", "lighting", "night", "lit"],
+    "answer": "The township has 650 street lights, so the roads are well lit at night.",
+    "facts": ["650 street lights"],
+    "source_pages": [21]
+  },
+  {
+    "id": "security",
+    "category": "Security",
+    "topic": "Security and compound wall",
+    "status": "confirmed",
+    "questions": [
+      "Is the township gated?",
+      "Is there security?",
+      "Is there CCTV surveillance?",
+      "Are there security cameras?",
+      "Is there a compound wall?",
+      "Is the project safe?",
+      "How is visitor security handled?"
+    ],
+    "keywords": ["security", "cctv", "camera", "compound wall", "gated", "safe", "surveillance"],
+    "answer": "The township has CCTV surveillance and a compound wall around it, with 15 controlled entrance ways.",
+    "facts": [
+      "CCTV surveillance",
+      "Compound wall",
+      "15 entrance ways"
+    ],
+    "source_pages": [21]
+  },
+  {
+    "id": "amenities_full",
+    "category": "Amenities",
+    "topic": "Complete amenity list",
+    "status": "confirmed",
+    "questions": [
+      "What amenities are available?",
+      "Give me the full list of amenities",
+      "What facilities will residents get?",
+      "What are the key features?",
+      "What do I get in this township?",
+      "List everything included"
+    ],
+    "keywords": ["amenities", "features", "facilities", "list", "everything", "included"],
+    "answer": "You get 80, 60 and 40-feet tar roads, all utilities underground, an STP plant, storm water drainage with recharge pits, 650 street lights, 1,200 trees, 10 parks with a 9-acre main park, sports and play areas, CCTV, a compound wall and the 52-feet Media Tower. The school, mall and club are proposed.",
+    "facts": [
+      "15 entrance ways",
+      "3 types of water connection",
+      "80, 60, 40 ft tar roads",
+      "Underground EB line",
+      "Underground Fibernet",
+      "Underground sewage",
+      "STP plant",
+      "Rain water drainage with recharge pits",
+      "650 street lights",
+      "1,200+ trees",
+      "10 parks",
+      "9-acre main park",
+      "Children play area",
+      "Adult sports area",
+      "Walking path",
+      "School (proposed)",
+      "Mall (proposed)",
+      "Club (proposed)",
+      "Gym",
+      "Amphitheatre",
+      "CCTV surveillance",
+      "Compound wall",
+      "Fountain and lawn",
+      "Mega sculptures",
+      "52-feet Media Tower"
+    ],
+    "source_pages": [21]
+  },
+  {
+    "id": "proposed_status",
+    "category": "Project Status",
+    "topic": "What is built versus proposed",
+    "status": "confirmed",
+    "questions": [
+      "What is already built?",
+      "Which amenities are ready?",
+      "Is the school built yet?",
+      "Is the mall ready?",
+      "Is the club open?",
+      "What is only proposed?",
+      "What is the current stage of the project?"
+    ],
+    "keywords": ["proposed", "built", "ready", "status", "stage", "complete", "construction"],
+    "answer": "The school, the mall and the recreational club are all marked as proposed in our brochure. The roads, underground utilities, parks and water infrastructure are part of the layout plan. For the exact current build status I'll have our sales team confirm.",
+    "facts": [
+      "School: Proposed",
+      "Mall: Proposed",
+      "Club: Proposed",
+      "Brochure designs and specifications are indicative and provisional",
+      "Promoter reserves the right to modify or amend"
+    ],
+    "source_pages": [21, 24]
+  },
+  {
+    "id": "hospitals",
+    "category": "Nearby",
+    "topic": "Hospitals near the site",
+    "status": "confirmed",
+    "questions": [
+      "Are hospitals nearby?",
+      "Which hospitals are within 15 minutes?",
+      "Is Royal Care Hospital nearby?",
+      "Is KMCH nearby?",
+      "How far is the nearest hospital?",
+      "Is there medical care close by?"
+    ],
+    "keywords": ["hospital", "medical", "royal care", "kmch", "healthcare", "doctor"],
+    "answer": "Royal Care Hospital and KMCH are both within 15 minutes of the site.",
+    "facts": ["Royal Care Hospital", "KMCH", "Both within 15 minutes"],
+    "source_pages": [22, 23]
+  },
+  {
+    "id": "nearby_landmarks",
+    "category": "Nearby",
+    "topic": "Nearby facilities and landmarks",
+    "status": "confirmed",
+    "questions": [
+      "What is nearby?",
+      "Is the airport close?",
+      "Are cinemas nearby?",
+      "Is D-Mart nearby?",
+      "Is KPR Tech Park nearby?",
+      "Are hotels nearby?",
+      "Are there restaurants nearby?",
+      "Are there car showrooms nearby?",
+      "Are there IT parks nearby?",
+      "Are there temples near the site?",
+      "Are there industries nearby?",
+      "What is around the project?"
+    ],
+    "keywords": ["nearby", "airport", "cinema", "dmart", "tech park", "hotel", "showroom", "temple", "it park", "industries", "restaurants"],
+    "answer": "The airport, Broadway Cinemas, D-Mart and KPR Tech Park are all close by, along with Hotel Le-Meridien, Gokulam Park and Hotel Merlis, Audi and MG showrooms, and restaurants like Hotel Kannappa, Thalappakatti, Dominos and KFC. There's an IT park within ten kilometres and several temples nearby.",
+    "facts": [
+      "Airport",
+      "Broadway Cinemas",
+      "D-Mart",
+      "KPR Tech Park",
+      "Hotel Le-Meridien, Gokulam Park, Hotel Merlis",
+      "Audi and MG car showrooms",
+      "Hotel Haribhavanam, Hotel Anandas, Hotel Kannappa, Thalappakatti, Dominos, KFC",
+      "Many industries and production units near the site",
+      "IT Park within 10 km surrounding",
+      "Mariamman Temple, Kaanaveda Perumal Temple, Vellanaipatti Kari Varadaraja Perumal Temple"
+    ],
+    "source_pages": [22, 23]
+  },
+  {
+    "id": "approvals",
+    "category": "Legal",
+    "topic": "DTCP and RERA approvals",
+    "status": "confirmed",
+    "questions": [
+      "Is the project DTCP approved?",
+      "What is the DTCP number?",
+      "Is it RERA registered?",
+      "What is the RERA registration number?",
+      "Can I verify the RERA registration?",
+      "Is the layout approved?",
+      "What legal approvals do you have?",
+      "Is it a legal layout?"
+    ],
+    "keywords": ["dtcp", "rera", "approval", "approved", "registration", "legal", "layout", "number"],
+    "answer": "Yes. Our DTCP number is 100 of 2023, and the RERA registration number is TN/11/Layout/3352/2025. You can verify it on the Tamil Nadu RERA website, rera.tn.gov.in.",
+    "facts": [
+      "DTCP No: 100/2023",
+      "RERA Registration No: TN/11/Layout/3352/2025",
+      "Verifiable at https://rera.tn.gov.in"
+    ],
+    "source_pages": [24]
+  },
+  {
+    "id": "contact",
+    "category": "Contact",
+    "topic": "Office address and contact details",
+    "status": "confirmed",
+    "questions": [
+      "How can I contact you?",
+      "What is your office address?",
+      "What is your phone number?",
+      "What is your email address?",
+      "What is your website?",
+      "Where is the sales office?",
+      "Can you give me your contact details?"
+    ],
+    "keywords": ["contact", "phone", "number", "email", "website", "office", "address", "call"],
+    "answer": "Our office is Unnamalai Promoters Private Limited, Number 583/2B1, Poongothai Nagar, Goldwins, Coimbatore 641014. You can call 9418 646464 or 77780 77790, or email info@karthipuram.com.",
+    "facts": [
+      "Unnamalai Promoters Pvt Ltd",
+      "No.583/2B1, Poongothai Nagar, Goldwins, Coimbatore-641014, Tamilnadu",
+      "+91 9418 646464",
+      "+91 77780 77790",
+      "info@karthipuram.com",
+      "www.unnamalaipromoters.com"
+    ],
+    "source_pages": [24]
+  },
+  {
+    "id": "investment_case",
+    "category": "Investment",
+    "topic": "Investment potential",
+    "status": "confirmed",
+    "questions": [
+      "Is this a good investment?",
+      "Why should I invest here?",
+      "Will the land value appreciate?",
+      "What is the investment potential?",
+      "Will I get good returns?",
+      "Is the area developing?",
+      "How much will the value grow?"
+    ],
+    "keywords": ["investment", "appreciation", "returns", "value", "growth", "invest", "profit"],
+    "answer": "Neelambur has strong fundamentals: airport expansion, highway and metro projects, a logistics hub and real economic momentum, and land here has shown price appreciation. I can't promise a specific return, but the location factors are solid.",
+    "facts": [
+      "Full land value with plot ownership",
+      "Land value keeps rising faster",
+      "Price appreciation trends in Neelambur",
+      "Economic momentum and strategic projects",
+      "No guaranteed return or numerical forecast is given in the brochure"
+    ],
+    "source_pages": [6]
+  },
+  {
+    "id": "lifestyle",
+    "category": "Lifestyle",
+    "topic": "Lifestyle and who it suits",
+    "status": "confirmed",
+    "questions": [
+      "What kind of lifestyle does this offer?",
+      "Is it designed for families?",
+      "Is it good for children?",
+      "Is it suitable for senior citizens?",
+      "Is it a premium township?",
+      "Why is it called a luxury township?",
+      "Is everything available inside?"
+    ],
+    "keywords": ["lifestyle", "family", "children", "senior", "premium", "luxury", "living", "community"],
+    "answer": "It's built as a premium township where daily life happens inside: parks for morning walks, play areas for children, shopping streets, dining and a community that gathers. Everything within walking distance instead of scattered across the city.",
+    "facts": [
+      "Family bonding and community gathering spaces",
+      "Children's play areas and parents pavilion",
+      "Walking tracks and morning walk spaces",
+      "Shopping, dining and recreation inside the township",
+      "Positioned as a grand urban masterpiece"
+    ],
+    "source_pages": [2, 3, 11, 12, 15]
+  },
+  {
+    "id": "construction_rules",
+    "category": "Construction",
+    "topic": "Building on your plot",
+    "status": "confirmed",
+    "questions": [
+      "Can I build a house after buying?",
+      "Can I build my own design?",
+      "Can I build a villa?",
+      "Can I expand later?",
+      "Can I use it for rental?",
+      "Am I forced to build immediately?"
+    ],
+    "keywords": ["build", "construct", "house", "villa", "design", "expand", "rental"],
+    "answer": "Yes, the plot is yours to build your dream home your way, expand anytime, and sell or rent as you wish. For the specific building rules and approvals, I'll have our team share the exact details.",
+    "facts": [
+      "Freedom to build your dream home your way",
+      "Expand anytime",
+      "Sell, rent or use the property",
+      "Specific setbacks, permitted floors and building rules are not in the brochure"
+    ],
+    "source_pages": [6]
+  },
+  {
+    "id": "coimbatore_context",
+    "category": "Project Overview",
+    "topic": "Coimbatore and township history",
+    "status": "confirmed",
+    "questions": [
+      "Why Coimbatore?",
+      "What is special about Coimbatore?",
+      "How has Coimbatore developed?",
+      "Where does Karthipuram fit in Coimbatore's growth?",
+      "Is Coimbatore a good city to invest in?"
+    ],
+    "keywords": ["coimbatore", "manchester", "history", "evolution", "growth", "city"],
+    "answer": "Coimbatore is called the Manchester of South India. The city has grown in stages, from the Race Course area in 1815 to Town Hall, RS Puram and Gandhipuram, and Karthipuram is positioned as the next chapter in 2025.",
+    "facts": [
+      "Coimbatore, the Manchester of South India",
+      "1815 Race Course",
+      "1892 Town Hall",
+      "1921 RS Puram",
+      "1974 Gandhipuram",
+      "2025 Karthipuram, Coimbatore's well planned integrated township"
+    ],
+    "source_pages": [4]
+  },
+  {
+    "id": "disclaimer",
+    "category": "Legal",
+    "topic": "Brochure disclaimer",
+    "status": "confirmed",
+    "questions": [
+      "Are the images accurate?",
+      "Is the brochure a contract?",
+      "Are the specifications final?",
+      "Can the plan change?",
+      "Is this an offer?"
+    ],
+    "keywords": ["disclaimer", "indicative", "contract", "offer", "change", "images", "provisional"],
+    "answer": "The designs, images and specifications in our brochure are indicative and provisional, and they aren't an offer or a contract. Anything final comes through the Agreement for Sale.",
+    "facts": [
+      "All designs, images, specifications and facilities are purely indicative",
+      "Treated as provisional and informative only",
+      "Promoter reserves the right to modify, change, amend or alter",
+      "Not an offer, invitation to offer, or contract",
+      "Interested parties must enter into an Agreement for Sale"
+    ],
+    "source_pages": [24]
+  }
+]
