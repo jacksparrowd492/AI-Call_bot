@@ -1,0 +1,738 @@
+{
+  "project": {
+    "name": "Karthipuram",
+    "type": "Integrated township / plotted development",
+    "location": "Coimbatore, Tamil Nadu",
+    "site_location": "Avinashi Road, Neelambur, Kathir Engineering College Road, Coimbatore; Kalapatti to Arasur SH Road",
+    "total_area_acres": 190,
+    "developer": "Unnamalai Promoters Pvt Ltd.",
+    "promoter_office": "No.583/2B1, Poongothai Nagar, Goldwins, Coimbatore-641014, Tamilnadu.",
+    "phone_numbers": [
+      "+919418646464",
+      "+917778077790"
+    ],
+    "email": "info@karthipuram.com",
+    "website": "www.unnamalaipromoters.com",
+    "dtcp_number": "100/2023",
+    "rera_registration_number": "TN/II/Layout/3352/2025",
+    "source_note": "All answers in this dataset are based on the supplied Karthipuram brochure. Items marked as not specified are intentionally not invented."
+  },
+  "knowledge_base": [
+    {
+      "category": "Project Overview",
+      "intent": "project_identity",
+      "questions": [
+        "What is Karthipuram?",
+        "Can you tell me about Karthipuram?",
+        "What kind of project is Karthipuram?",
+        "Is Karthipuram a residential project?",
+        "Is Karthipuram a township?",
+        "What makes Karthipuram different?",
+        "What is the main idea behind Karthipuram?",
+        "Why is Karthipuram being promoted as an integrated township?",
+        "How large is Karthipuram?",
+        "How many acres is Karthipuram?"
+      ],
+      "answer": "Karthipuram is presented in the brochure as a 190-acre well-planned integrated township in Coimbatore, combining residential plots, commercial plots, roads, parks, education, shopping, recreation and modern infrastructure.",
+      "facts": [
+        "190-acre township",
+        "Residential plots",
+        "Commercial plots",
+        "Integrated amenities",
+        "Modern infrastructure"
+      ],
+      "source_pages": [
+        3,
+        7
+      ]
+    },
+    {
+      "category": "Promoter",
+      "intent": "developer_background",
+      "questions": [
+        "Who is the promoter of Karthipuram?",
+        "Who developed Karthipuram?",
+        "Which company is behind Karthipuram?",
+        "Who are the Karthipuram promoters?",
+        "Tell me about Unnamalai Promoters.",
+        "What is the promoter's office address?",
+        "How can I contact the Karthipuram office?",
+        "What is the Karthipuram contact number?",
+        "What is the Karthipuram email address?"
+      ],
+      "answer": "The brochure identifies Unnamalai Promoters Pvt Ltd. as the promoter. The office is listed at No.583/2B1, Poongothai Nagar, Goldwins, Coimbatore-641014, Tamilnadu. Contact numbers shown are +919418646464 and +917778077790, and the email is info@karthipuram.com.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "category": "Location",
+      "intent": "site_location",
+      "questions": [
+        "Where is Karthipuram located?",
+        "Where exactly is the Karthipuram site?",
+        "Is Karthipuram in Coimbatore?",
+        "Is Karthipuram near Neelambur?",
+        "Is the project on Avinashi Road?",
+        "How do I reach Karthipuram?",
+        "What is the road location of the project?",
+        "Is Karthipuram near Kathir Engineering College Road?",
+        "Is Karthipuram connected to the Kalapatti to Arasur SH Road?"
+      ],
+      "answer": "The brochure lists the site as Avinashi Road, Neelambur, Kathir Engineering College Road, Coimbatore, with a location reference to Kalapatti to Arasur SH Road.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "category": "Connectivity and Location Advantages",
+      "intent": "why_neelambur",
+      "questions": [
+        "Why should I buy a plot in Neelambur?",
+        "Why is Neelambur a good location?",
+        "What are the advantages of Neelambur?",
+        "Is Neelambur well connected?",
+        "How is the airport connectivity?",
+        "Is Neelambur connected to the highway?",
+        "Is Neelambur developing?",
+        "Is Neelambur a logistics hub?",
+        "What is the future growth potential of Neelambur?",
+        "Is the area suitable for residential development?",
+        "Why is Neelambur considered for investment?"
+      ],
+      "answer": "The brochure highlights Neelambur for excellent connectivity, airport and highway access, logistics and expansion, metro-hub potential, economic growth, residential and lifestyle momentum, strategic projects and price appreciation trends.",
+      "source_pages": [
+        6
+      ]
+    },
+    {
+      "category": "Plots",
+      "intent": "plot_inventory",
+      "questions": [
+        "How many residential plots are there?",
+        "How many housing plots are available in the township?",
+        "How many commercial plots are there?",
+        "How many commercial plots does Karthipuram have?",
+        "What types of plots are available?",
+        "Does Karthipuram have residential plots?",
+        "Does Karthipuram have commercial plots?",
+        "Are there different plot types?"
+      ],
+      "answer": "The brochure's project summary states 1,882 housing plots and 213 commercial plots. It also highlights 10 plot-related/types in its summary graphic, but the individual plot-type dimensions are not specified in the brochure text available here.",
+      "facts": [
+        "1,882 housing plots",
+        "213 commercial plots"
+      ],
+      "source_pages": [
+        7
+      ]
+    },
+    {
+      "category": "Why Buy a Plot",
+      "intent": "plot_benefits",
+      "questions": [
+        "Why should I buy a plot instead of a flat?",
+        "Why are plots better?",
+        "What are the benefits of owning a plot?",
+        "Can I build my own house on the plot?",
+        "Can I design my home the way I want?",
+        "Can I expand my house later?",
+        "Can I rent out my property?",
+        "Can I sell the plot later?",
+        "Does land ownership provide more freedom?",
+        "Is buying a plot a good investment?"
+      ],
+      "answer": "The brochure says plots offer full land value, freedom to build your dream home your way, the ability to expand anytime, and the flexibility to sell, rent or use the property. It also states that ownership keeps rising faster and provides independence.",
+      "source_pages": [
+        6
+      ]
+    },
+    {
+      "category": "Roads",
+      "intent": "road_network",
+      "questions": [
+        "What is the road width inside Karthipuram?",
+        "How wide are the roads?",
+        "Does the project have 80-feet roads?",
+        "Does the project have 60-feet roads?",
+        "Are there 40-feet roads?",
+        "How long are the shopping roads?",
+        "How much road network is there?",
+        "Are the roads wide?",
+        "How many entrance roads are there?"
+      ],
+      "answer": "The brochure highlights 80-feet and 60-feet roads extending over 4 kilometres. A later feature summary also lists 80, 60 and 40-feet road types. The project summary graphic states 15 entrance ways.",
+      "facts": [
+        "80-ft roads",
+        "60-ft roads",
+        "40-ft roads",
+        "4+ km highlighted road stretch",
+        "15 entrance ways"
+      ],
+      "source_pages": [
+        3,
+        7,
+        15,
+        21
+      ]
+    },
+    {
+      "category": "Parks and Greenery",
+      "intent": "parks",
+      "questions": [
+        "How many parks are there?",
+        "Does Karthipuram have a central park?",
+        "How large is the central park?",
+        "Is there a 9-acre park?",
+        "What facilities are available in the parks?",
+        "Is there a walking track?",
+        "Is there a children's play area?",
+        "Is there an outdoor gym?",
+        "Is there an adult sports area?",
+        "Is there a reflexology path?",
+        "Is there an amphitheatre?",
+        "Are there gazebos?",
+        "Is there a cricket practice area?",
+        "Are there fountains and sculptures?"
+      ],
+      "answer": "Karthipuram is described as having 10 parks, including a beautifully landscaped 9-acre central park. Listed park features include a central lawn, walking track, playground, reflexology path, plaza, outdoor gym, adult sports area, gazebo, children's play area, fountain, parents pavilion, amphitheatre, cricket net practice and mega sculptures.",
+      "facts": [
+        "10 parks",
+        "9-acre central park",
+        "1,200+ trees"
+      ],
+      "source_pages": [
+        7,
+        11,
+        21
+      ]
+    },
+    {
+      "category": "Trees and Environment",
+      "intent": "green_environment",
+      "questions": [
+        "Is Karthipuram a green township?",
+        "How many trees are there?",
+        "Does the project have landscaped green areas?",
+        "What is the natural environment like?",
+        "Is the area naturally cool?",
+        "Can I see the Nilgiri Mountains from the township?",
+        "Can I see the Aanaikatti hills?",
+        "How is the evening climate?",
+        "Is the project surrounded by greenery?"
+      ],
+      "answer": "The brochure states that Karthipuram has 1,200+ trees and multiple parks. It describes the township as surrounded by lush greenery and says the location is at an altitude that is highest in the surrounding region, with views toward the Nilgiri Mountains to the north and sunset views amidst the Aanaikatti hills to the west.",
+      "source_pages": [
+        7,
+        19
+      ]
+    },
+    {
+      "category": "Education",
+      "intent": "school_facilities",
+      "questions": [
+        "Is there a school in Karthipuram?",
+        "Will there be a school inside the township?",
+        "Are schools available nearby?",
+        "How far are schools from Karthipuram?",
+        "Which schools are within 15 minutes?",
+        "Can children avoid long school travel?",
+        "What schools are near the project?"
+      ],
+      "answer": "The brochure presents premium education as part of the township vision and lists schools said to be within 15 minutes: Yellow Train School, GRD-CPF School, Reeds World School, Indian Public School, Chandramati International School and Sri Chaitanya Techno School. The brochure also shows a school as a township feature, but the exact operational status/date is not specified.",
+      "source_pages": [
+        8,
+        21,
+        22
+      ]
+    },
+    {
+      "category": "Nearby Colleges",
+      "intent": "college_access",
+      "questions": [
+        "Which colleges are near Karthipuram?",
+        "Are colleges available within 15 minutes?",
+        "Which engineering colleges are nearby?",
+        "Is Kathir College nearby?",
+        "Is PSG iTech nearby?",
+        "What colleges are around Neelambur?"
+      ],
+      "answer": "The brochure lists Kathir College of Arts & Science, Kathir Engineering College, Adithya Arts College & Engineering College, PSG iTech and GRD College of Education as colleges within 15 minutes.",
+      "source_pages": [
+        22
+      ]
+    },
+    {
+      "category": "Shopping",
+      "intent": "shopping_amenities",
+      "questions": [
+        "Does Karthipuram have shopping facilities?",
+        "Is there a shopping mall?",
+        "Are there shopping streets?",
+        "How long are the shopping streets?",
+        "Are there retail stores?",
+        "Can I buy daily essentials inside the township?",
+        "Are there boutiques?",
+        "Are there lifestyle stores?",
+        "Will I need to travel outside the township for shopping?"
+      ],
+      "answer": "The brochure describes shopping as a core part of Karthipuram, with a shopping mall concept, boutique stores and lifestyle spaces. It highlights over 4 kilometres of 80- and 60-feet roads forming shopping streets and says essentials and luxury retail are intended to be available within the township.",
+      "source_pages": [
+        3,
+        9,
+        15
+      ]
+    },
+    {
+      "category": "Dining and Entertainment",
+      "intent": "dining_entertainment",
+      "questions": [
+        "Are restaurants available in Karthipuram?",
+        "Is there fine dining?",
+        "Are there entertainment facilities?",
+        "Is there a shopping and entertainment zone?",
+        "Can I dine inside the township?",
+        "Are there luxury retail and dining facilities?"
+      ],
+      "answer": "The brochure describes fine dining, luxury retail shopping and entertainment as part of the township experience. The recreational club also mentions a signature restaurant.",
+      "source_pages": [
+        9,
+        12
+      ]
+    },
+    {
+      "category": "Recreational Club",
+      "intent": "club_amenities",
+      "questions": [
+        "Does Karthipuram have a club?",
+        "What is available in the recreational club?",
+        "Is there a swimming pool?",
+        "Is there a gym or fitness studio?",
+        "Are there indoor games?",
+        "Is there a restaurant in the club?",
+        "Can I host meetings or functions?",
+        "Are there meeting spaces?"
+      ],
+      "answer": "The Recreational Club is described as having a swimming pool, modern fitness studio, indoor games, a signature restaurant and elegant meeting spaces for gatherings.",
+      "source_pages": [
+        12
+      ]
+    },
+    {
+      "category": "Media Tower",
+      "intent": "media_tower",
+      "questions": [
+        "What is the 52-feet Media Tower?",
+        "Why does Karthipuram have a Media Tower?",
+        "What does the Media Tower do?",
+        "Does the township have digital displays?",
+        "Will the Media Tower show community updates?",
+        "Can it display advertisements and cultural events?",
+        "Is the Media Tower illuminated at night?"
+      ],
+      "answer": "The brochure describes a 52-feet Media Tower at the centre of Karthipuram's grand boulevard. It is planned with LED pixels and smart displays for real-time information, branding, community updates, advertisements, cultural events and global content. The brochure says its illumination becomes a visual landmark at night.",
+      "source_pages": [
+        13
+      ]
+    },
+    {
+      "category": "Underground Infrastructure",
+      "intent": "underground_utilities",
+      "questions": [
+        "Does Karthipuram have underground electricity?",
+        "Are electricity cables underground?",
+        "Are internet cables underground?",
+        "Does the project have underground sewage?",
+        "Is the drainage system underground?",
+        "Are there underground utilities?",
+        "Will there be electricity poles inside the project?",
+        "How is the infrastructure protected from storms?"
+      ],
+      "answer": "The brochure describes world-class underground infrastructure. Electricity uses insulated underground cables in concrete ducts. High-speed fiber optics are laid underground. Underground sewage pipelines are laid at the centre of roads and connected to plots. Modern storm-water drains run along both sides of roads.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "category": "Internet",
+      "intent": "fiber_connectivity",
+      "questions": [
+        "Does Karthipuram have internet connectivity?",
+        "Is fiber internet available?",
+        "Is Fibernet provided underground?",
+        "Will I get high-speed internet?",
+        "Is fiber connectivity available for homes?",
+        "Is internet infrastructure already planned?"
+      ],
+      "answer": "The brochure lists underground Fibernet cable infrastructure and says high-speed fiber optics are laid securely underground for browsing, video calls, streaming and smart-home connectivity.",
+      "source_pages": [
+        16,
+        17
+      ]
+    },
+    {
+      "category": "Sewage and STP",
+      "intent": "sewage_treatment",
+      "questions": [
+        "Does Karthipuram have a sewage system?",
+        "Is sewage connected to every plot?",
+        "Is there an STP plant?",
+        "What is the sewage treatment system?",
+        "Will wastewater be treated?",
+        "Is treated wastewater reused?",
+        "Will the township have a clean sewage system?",
+        "Will there be sewage smell or mosquito issues?"
+      ],
+      "answer": "The brochure states that underground sewage pipelines are laid at the centre of roads and connected to every plot. It describes an advanced Sewage Treatment Plant where wastewater is purified and reused for greenery, with the stated aim of maintaining a clean, odour-free and mosquito-free environment.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "category": "Storm Water",
+      "intent": "rainwater_and_drainage",
+      "questions": [
+        "How does Karthipuram handle rainwater?",
+        "Is there a storm-water drainage system?",
+        "Will there be waterlogging?",
+        "Are recharge pits provided?",
+        "How is groundwater recharge handled?",
+        "Does the township have rainwater management?"
+      ],
+      "answer": "The brochure describes modern storm-water drains on both sides of roads with recharge pits at frequent intervals. It says the system is designed to prevent waterlogging and help increase groundwater levels.",
+      "source_pages": [
+        17,
+        21
+      ]
+    },
+    {
+      "category": "Water Supply",
+      "intent": "triple_water_supply",
+      "questions": [
+        "What is the water source in Karthipuram?",
+        "Will Karthipuram have a reliable water supply?",
+        "What are the three water sources?",
+        "Does Karthipuram get Bhavani water?",
+        "Does Karthipuram get Athikadavu water?",
+        "Is borewell water available?",
+        "Is there a centralized bore system?",
+        "Will every house have water?",
+        "Will there be water scarcity?",
+        "Is drinking water available?",
+        "Is water available for gardening and household use?"
+      ],
+      "answer": "The brochure describes an assured triple water supply: Bhavani Water sourced from the Bhavani River, Athikadavu Water sourced from Pillur Dam, and Bore Water supplied through a centralized bore system for the township. It presents this combination as intended to provide reliable water for drinking, cooking, gardening and daily household use.",
+      "source_pages": [
+        16,
+        18
+      ]
+    },
+    {
+      "category": "Electricity",
+      "intent": "power_infrastructure",
+      "questions": [
+        "Is electricity available in Karthipuram?",
+        "How will electricity be supplied?",
+        "Are power cables underground?",
+        "Are the electrical lines insulated?",
+        "Will there be power poles?",
+        "Is the electrical infrastructure storm resistant?"
+      ],
+      "answer": "The brochure describes insulated underground electricity cables running through concrete ducts and presents this as a safer and more reliable alternative to exposed poles.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "category": "Hospitals and Healthcare",
+      "intent": "nearby_hospitals",
+      "questions": [
+        "Are hospitals near Karthipuram?",
+        "Which hospitals are within 15 minutes?",
+        "Is Royal Care Hospital nearby?",
+        "Is KMCH nearby?",
+        "How far are hospitals from the project?"
+      ],
+      "answer": "The brochure lists Royal Care Hospital and KMCH among hospitals within 15 minutes.",
+      "source_pages": [
+        22
+      ]
+    },
+    {
+      "category": "Nearby Facilities",
+      "intent": "nearby_landmarks",
+      "questions": [
+        "What facilities are near Karthipuram?",
+        "Is the airport nearby?",
+        "Are cinemas nearby?",
+        "Is D-Mart nearby?",
+        "Is KPR Tech Park nearby?",
+        "Are hotels nearby?",
+        "Are car showrooms nearby?",
+        "Are restaurants nearby?",
+        "Are industries near the site?",
+        "Are IT parks near the site?",
+        "Are temples near the project?"
+      ],
+      "answer": "The brochure lists Airport, Broadway Cinemas, D-Mart, KPR Tech Park, Hotel Le-Meridian, Gokulam Park, Hotel Merlis, Audi and MG showrooms, several restaurants, nearby industries and production units, an IT Park within a stated 10 km surrounding area, and several temples near the site.",
+      "source_pages": [
+        22
+      ]
+    },
+    {
+      "category": "Investment",
+      "intent": "investment_case",
+      "questions": [
+        "Is Karthipuram a good investment?",
+        "Why should I invest in Karthipuram?",
+        "What is the investment potential?",
+        "Will land value appreciate?",
+        "Why is Neelambur good for investment?",
+        "What future growth does the location have?",
+        "Is the area developing?",
+        "What factors can support future appreciation?"
+      ],
+      "answer": "The brochure markets plot ownership as offering full land value, flexibility and potential appreciation. For Neelambur it highlights connectivity, logistics and expansion, economic growth, residential and lifestyle momentum, strategic projects and price-appreciation trends. The brochure does not provide a guaranteed future return or a numerical appreciation forecast.",
+      "source_pages": [
+        6
+      ]
+    },
+    {
+      "category": "Legal and Approvals",
+      "intent": "project_approvals",
+      "questions": [
+        "Is Karthipuram DTCP approved?",
+        "What is the DTCP number?",
+        "Is Karthipuram RERA registered?",
+        "What is the RERA registration number?",
+        "Can I verify the RERA registration?",
+        "What legal approvals are mentioned in the brochure?"
+      ],
+      "answer": "The brochure lists DTCP No. 100/2023 and RERA Registration No. TN/II/Layout/3352/2025. It also displays the Tamil Nadu RERA website reference. The brochure alone does not provide a complete legal due-diligence report.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "category": "Pricing",
+      "intent": "price_enquiry",
+      "questions": [
+        "What is the price per cent?",
+        "What is the price per square foot?",
+        "How much does a plot cost?",
+        "What is the price of a residential plot?",
+        "What is the price of a commercial plot?",
+        "Are there discounts?",
+        "Is there a launch offer?",
+        "What is the booking amount?",
+        "What is the minimum advance?",
+        "What are the registration charges?",
+        "What are the other charges?"
+      ],
+      "answer": "The supplied brochure does not state current plot prices, discounts, booking amount, registration charges or other commercial terms. A salesperson should obtain the latest official price sheet before answering these questions.",
+      "source_pages": [
+        2,
+        24
+      ]
+    },
+    {
+      "category": "Plot Size and Availability",
+      "intent": "availability_and_dimensions",
+      "questions": [
+        "What plot sizes are available?",
+        "Do you have 1200 sq ft plots?",
+        "Do you have 1500 sq ft plots?",
+        "Do you have 2400 sq ft plots?",
+        "What is the smallest plot?",
+        "What is the largest plot?",
+        "Which plots are corner plots?",
+        "Which plots face the park?",
+        "Which plots face the main road?",
+        "Are commercial plots available?",
+        "Which plots are currently available?"
+      ],
+      "answer": "The brochure confirms housing and commercial plots but does not provide a complete plot-size inventory, current availability, plot numbers or current inventory status. These details should be retrieved from the latest official inventory rather than inferred.",
+      "source_pages": [
+        7
+      ]
+    },
+    {
+      "category": "Booking and Purchase Process",
+      "intent": "booking_process",
+      "questions": [
+        "How can I book a plot?",
+        "What is the booking process?",
+        "What documents do I need to buy a plot?",
+        "Can I reserve a plot?",
+        "Can I visit the site before booking?",
+        "Can I choose my plot number?",
+        "How long can I hold a plot?",
+        "What are the payment options?",
+        "Is there a payment plan?",
+        "Can I buy the plot using a home loan?",
+        "Do you provide loan assistance?"
+      ],
+      "answer": "The brochure does not specify the booking workflow, required buyer documents, reservation period, payment schedule, loan partners or loan eligibility. These must be confirmed with the sales office.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "category": "Construction and Usage",
+      "intent": "construction_flexibility",
+      "questions": [
+        "Can I construct a house after buying the plot?",
+        "Can I build my own house?",
+        "Can I choose my own house design?",
+        "Can I build a villa?",
+        "Can I construct immediately?",
+        "Are there construction rules?",
+        "What are the building restrictions?",
+        "Can I expand my house later?",
+        "Can I use the property for rental?",
+        "Can I sell the plot after buying it?"
+      ],
+      "answer": "The brochure promotes plots as giving buyers freedom to build a dream home their way and expand anytime, and says the property can be sold or rented. Specific construction rules, building approval requirements, permitted floors, setbacks and usage restrictions are not provided in the brochure.",
+      "source_pages": [
+        6
+      ]
+    },
+    {
+      "category": "Maintenance",
+      "intent": "maintenance",
+      "questions": [
+        "What is the maintenance charge?",
+        "Is there a monthly maintenance fee?",
+        "Who will maintain the parks?",
+        "Who will maintain the roads?",
+        "Who will maintain the sewage treatment plant?",
+        "Who will maintain the common areas?",
+        "Is there a township maintenance association?"
+      ],
+      "answer": "Maintenance charges, maintenance agency details and association arrangements are not specified in the supplied brochure.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "category": "Security",
+      "intent": "security",
+      "questions": [
+        "Is Karthipuram gated?",
+        "Does the township have security?",
+        "Is there CCTV surveillance?",
+        "Are there security cameras?",
+        "Is there a compound wall?",
+        "How is visitor security handled?"
+      ],
+      "answer": "The feature summary in the brochure lists CCTV surveillance and a compound wall. Details about guards, gates, visitor management and security operating procedures are not specified.",
+      "source_pages": [
+        21
+      ]
+    },
+    {
+      "category": "Community Amenities",
+      "intent": "overall_amenities",
+      "questions": [
+        "What amenities are available in Karthipuram?",
+        "Give me the complete list of amenities.",
+        "What facilities will residents get?",
+        "Does Karthipuram have parks?",
+        "Does it have a school?",
+        "Does it have a mall?",
+        "Does it have a club?",
+        "Does it have an amphitheatre?",
+        "Does it have sports facilities?",
+        "Does it have walking areas?",
+        "Does it have children's play areas?",
+        "Does it have a Media Tower?"
+      ],
+      "answer": "The brochure's feature list includes 80-, 60- and 40-feet roads, underground electricity, underground Fibernet, underground sewage, storm-water drainage and recharge pits, street lights, 1,200+ trees, 10 parks, a 9-acre main park, children's play area, adult sports area, walking facilities, school, mall, recreational club, amphitheatre, CCTV surveillance, compound wall, fountain, mega sculptures and a 52-feet Media Tower.",
+      "source_pages": [
+        11,
+        12,
+        13,
+        17,
+        21
+      ]
+    },
+    {
+      "category": "Lifestyle",
+      "intent": "lifestyle_positioning",
+      "questions": [
+        "What kind of lifestyle does Karthipuram offer?",
+        "Is Karthipuram designed for families?",
+        "Is it suitable for children?",
+        "Is it suitable for senior citizens?",
+        "Is it a premium township?",
+        "Why is Karthipuram called a luxury township?",
+        "Is everything available within the township?"
+      ],
+      "answer": "The brochure positions Karthipuram as a premium, integrated township combining residential living with parks, education, shopping, recreation, dining and modern underground infrastructure. It specifically highlights family bonding, children's play areas, walking spaces and community gathering areas.",
+      "source_pages": [
+        2,
+        3,
+        11,
+        12,
+        15
+      ]
+    },
+    {
+      "category": "Water Details",
+      "intent": "water_source_details",
+      "questions": [
+        "Where does the Bhavani water come from?",
+        "Where does the Athikadavu water come from?",
+        "What is the bore water arrangement?",
+        "Are individual borewells required?",
+        "Is there a centralized bore system?",
+        "Why are there three water sources?",
+        "Is the water supply designed to prevent scarcity?"
+      ],
+      "answer": "According to the brochure, Bhavani water is sourced from the Bhavani River, Athikadavu water is sourced from Pillur Dam, and bore water is supplied through a centralized bore system for the township. The brochure specifically says individual bores are not needed under this centralized system.",
+      "source_pages": [
+        18
+      ]
+    },
+    {
+      "category": "Contact and Verification",
+      "intent": "contact_information",
+      "questions": [
+        "How can I contact Karthipuram?",
+        "What is the official Karthipuram website?",
+        "What is the Karthipuram email?",
+        "What is the office address?",
+        "What phone number should I call?",
+        "Where is the sales office?"
+      ],
+      "answer": "The brochure lists Unnamalai Promoters Pvt Ltd., No.583/2B1, Poongothai Nagar, Goldwins, Coimbatore-641014, Tamilnadu; phone numbers +919418646464 and +917778077790; email info@karthipuram.com; website www.unnamalaipromoters.com.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "category": "Unspecified / Escalation",
+      "intent": "questions_requiring_latest_sales_data",
+      "questions": [
+        "What plots are available today?",
+        "Which plot numbers are available?",
+        "What is today's price?",
+        "What is the latest offer?",
+        "Can you give me a payment schedule?",
+        "Can I get a discount?",
+        "What is the current booking amount?",
+        "What is the possession date?",
+        "When can I start construction?",
+        "What are the exact dimensions of this plot?",
+        "Can you send me the latest layout?",
+        "Can you send me the floor plan?",
+        "Can you send me the brochure?",
+        "Can I schedule a site visit?"
+      ],
+      "answer": "These questions require current sales, inventory or operational information that is not contained in the supplied brochure. The voice agent should not invent an answer. It should collect the customer's requirement and either provide the latest connected CRM/inventory information or transfer/escalate to a salesperson.",
+      "source_pages": [
+        24
+      ]
+    }
+  ]
+}
